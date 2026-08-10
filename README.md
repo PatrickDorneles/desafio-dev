@@ -57,19 +57,33 @@ Não são obrigatórios, mas serão considerados um **bônus** na sua avaliaçã
 O projeto está dividido em duas aplicações separadas:
 ```text
 📦 projeto-raiz/
+├── 📁 docs/                     # Documentação (specs + ADRs)
 ├── 📁 api/                      # Backend (NestJS)
+│   ├── 📁 docs/                 # Documentação da API
 │   ├── 📁 node_modules/
 │   ├── 📁 src/                  # Código-fonte da API
 │   ├── 📁 test/                 # Testes automatizados
 │   ├── ...
 │
 ├── 📁 ui/                       # Frontend (Next.js)
+│   ├── 📁 docs/                 # Documentação da UI
 │   ├── 📁 node_modules/
 │   ├── 📁 public/               # Arquivos estáticos
 │   ├── 📁 src/
 │   │   └── 📁 app/              # Código-fonte do frontend
 │   ├── ...
 ```
+
+## 📚 Documentação
+
+O projeto usa documentação orientada a **especificações e decisões** (spec-driven development) para guiar o desenvolvimento — humano e agêntico (agentes de IA):
+
+- 📋 **`docs/specs/`** — Especificações de funcionalidades (o que construir): requisitos, critérios de aceitação e contratos.
+- 🧭 **`docs/adr/`** — Architecture Decision Records (por que foi decidido): contexto, opções e consequências de cada decisão de arquitetura.
+- 🔧 **`api/docs/`** — Documentação específica do backend.
+- 🎨 **`ui/docs/`** — Documentação específica do frontend.
+
+Templates prontos para criação de novas specs e ADRs: [`docs/specs/_template.md`](./docs/specs/_template.md) e [`docs/adr/_template.md`](./docs/adr/_template.md).
 
 ## 🗄️ Banco de Dados
 Se sua aplicação utilizar **banco de dados relacional** (como PostgreSQL, MySQL, etc), é **obrigatório** fornecer um dos seguintes:
