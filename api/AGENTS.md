@@ -28,6 +28,7 @@ src/
 ```
 
 - DI via constructor injection; default provider scope (singleton); `forwardRef` only for circular dependencies.
+- **Entity-per-module (ADR-0004):** every Drizzle entity lives in its own module — `src/<entity>/` owns `entities/` (schema) + `repositories/` and **exports its repository** (`exports: [XxxRepository]`). Consumer modules import the owner module and inject the exported repository (e.g. `auth` imports `UsersModule` and uses `UsersRepository` in `AuthService`; `auth` owns no entity). FKs between tables import the owner entity file directly (`src/users/entities/users.entity`).
 - **Layer discipline (SOLID/DRY):** controllers stay thin — no ORM calls; services hold domain logic — no raw DTO shaping; repositories are the only layer touching Drizzle. Reusable logic lives in `src/common/utils/` or shared services.
 - Pipeline: Middleware → Guards → Interceptors → Pipes → Handler.
   - Guards: auth/roles. Pipes: input validation (Zod/DTO). Interceptors: response shaping.

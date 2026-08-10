@@ -10,8 +10,8 @@ import {
   BCRYPT_SALT_ROUNDS,
   DUMMY_HASH,
 } from '../../common/constants/auth.constants';
-import { UserRow } from '../entities/users.entity';
-import { UsersRepository } from '../repositories/users.repository';
+import { UserRow } from '../../users/entities/users.entity';
+import { UsersRepository } from '../../users/repositories/users.repository';
 
 export interface UserProfile {
   id: string;

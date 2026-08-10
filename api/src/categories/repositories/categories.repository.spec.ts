@@ -8,7 +8,7 @@ import { eq } from 'drizzle-orm';
 import Database = require('better-sqlite3');
 import { drizzle, BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
-import { users } from '../../auth/entities/users.entity';
+import { users } from '../../users/entities/users.entity';
 import { DRIZZLE } from '../../common/constants/database.constants';
 import { categories } from '../entities/category.entity';
 import { CategoriesRepository } from './categories.repository';

@@ -59,7 +59,7 @@ ui/src/app/    # Next.js App Router pages (see ui/AGENTS.md)
 ## Code Style
 
 - TypeScript strict; no `any`; derive types from Zod schemas (`z.infer`) instead of hand-written interfaces for contracts.
-- NestJS: module-per-feature, constructor DI, thin controllers, logic in services.
+- NestJS: module-per-feature, constructor DI, thin controllers, logic in services. Entity-per-module (ADR-0004): each Drizzle entity has its own module that exports its repository.
 - Next.js: Server Components by default; `"use client"` only when interactivity requires it.
 - Format with Prettier, lint with the provided ESLint configs.
 

@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
-import { users } from '../../auth/entities/users.entity';
+import { users } from '../../users/entities/users.entity';
 import { categories } from '../../categories/entities/category.entity';
 
 /**

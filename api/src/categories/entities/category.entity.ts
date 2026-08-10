@@ -5,7 +5,7 @@ import {
   text,
   uniqueIndex,
 } from 'drizzle-orm/sqlite-core';
-import { users } from '../../auth/entities/users.entity';
+import { users } from '../../users/entities/users.entity';
 
 /**
  * `categories` table — Spec 002, §8.

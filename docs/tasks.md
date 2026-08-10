@@ -47,6 +47,10 @@ Convenções: `AGENTS.md` (raiz + `api/`), ADRs 0001–0003, skills `drizzle-sql
 - [x] **T-041 Revisão Swagger** — todos os endpoints documentados (schemas, erros, tags, Bearer). *Verificar:* inspeção em `/swagger`.
 - [x] **T-042 Verificação total** — `npm run build` · `npm run lint` · `npm test` · `npm run test:e2e` passando do zero. *Verificar:* CI-like run.
 
+## Fase 5 — Refatoração (pós-revisão)
+
+- [x] **T-043 Módulo `users` (entity-per-module, ADR-0004)** — entidade `users` + `UsersRepository` movidos de `auth/` para `src/users/`; `UsersModule` exporta o repositório; `auth` importa `UsersModule` e não possui mais entidade. *Verificar:* `npm run build` · `npm test` · `npm run test:e2e`.
+
 ## Fora de escopo (por decisão)
 
 - UI do frontend (será planejada separadamente).
