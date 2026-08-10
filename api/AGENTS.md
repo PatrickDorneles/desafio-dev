@@ -11,13 +11,29 @@ Conventions for the `api/` package. Read the root `AGENTS.md` first.
 
 ## NestJS Conventions
 
-- Module-per-feature under `src/<feature>/`: `module.ts` + `controller.ts` + `service.ts` + `dto/` + `entities/`.
+Layered, module-per-feature structure — see **ADR-0003** (`docs/adr/0003-arquitetura-em-camadas.md`):
+
+```text
+src/
+├── common/                 # global, no module ties
+│   ├── utils/              # reusable helpers
+│   └── constants/          # immutable values (keys, names)
+└── <feature>/
+    ├── module.ts
+    ├── controllers/        # routes + decorators (guards, validation, Swagger)
+    ├── services/           # domain logic
+    ├── repositories/       # ORM integration (Drizzle) — consumed by services
+    ├── dto/                # Zod schemas per function (create/update/login…)
+    └── entities/           # Drizzle schema of the module
+```
+
 - DI via constructor injection; default provider scope (singleton); `forwardRef` only for circular dependencies.
+- **Layer discipline (SOLID/DRY):** controllers stay thin — no ORM calls; services hold domain logic — no raw DTO shaping; repositories are the only layer touching Drizzle. Reusable logic lives in `src/common/utils/` or shared services.
 - Pipeline: Middleware → Guards → Interceptors → Pipes → Handler.
   - Guards: auth/roles. Pipes: input validation (Zod/DTO). Interceptors: response shaping.
 - Use the Fastify adapter idiomatically: platform-agnostic code; reach the HTTP server via `app.getHttpAdapter()`.
 - Swagger: keep `@ApiTags`/`@ApiOperation`/schema decorators on all endpoints; document DTO schemas.
-- Controllers are thin — business logic lives in services; DB access via Drizzle in services/repositories.
+- Error responses must use the global envelope `{ statusCode, message, error }` (T-003) — never ad-hoc error shapes.
 
 ## Drizzle ORM + SQLite
 
@@ -32,6 +48,7 @@ Conventions for the `api/` package. Read the root `AGENTS.md` first.
 ## Zod (schemas)
 
 - Zod is the source of truth for DTOs and entities; derive TS types with `z.infer`.
+- **DTOs via `nestjs-zod`:** use `createZodDto(MySchema)` in `dto/` and a global `ZodValidationPipe` — this keeps Zod as single source and documents the Swagger schemas automatically (ADR-0003). Don't hand-roll a validation pipe.
 - Parse at the boundary with `safeParse`; map failures to structured 4xx responses.
 - Keep contracts shared/consistent with the UI (see the `zod-shared-schemas` skill).
 

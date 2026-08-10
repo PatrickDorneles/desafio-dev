@@ -41,6 +41,7 @@ npm run lint --prefix ui
 ```text
 docs/specs/    # feature specs (contracts) — read before implementing
 docs/adr/      # architecture decision records — append-only
+docs/tasks.md  # implementation roadmap (task breakdown with verification steps)
 api/docs/      # API operational docs
 ui/docs/       # UI operational docs
 api/src/       # NestJS source (see api/AGENTS.md)
@@ -50,6 +51,7 @@ ui/src/app/    # Next.js App Router pages (see ui/AGENTS.md)
 ## Documentation Pointers
 
 - **Read first, then code:** no implementation starts without reading the relevant spec in `docs/specs/` and its related ADRs in `docs/adr/`.
+- **Follow the roadmap:** `docs/tasks.md` breaks implementation into ordered tasks (T-001…) with explicit verification steps. Mark tasks done as you complete them; don't skip the order.
 - No spec for a feature? Create one with `docs/specs/_template.md`, get it Approved, then implement.
 - New architectural decision → new ADR with `docs/adr/_template.md`. `docs/adr/` is append-only; Accepted ADRs are immutable (only a new superseding ADR may change them).
 - Per-app conventions: `api/AGENTS.md` and `ui/AGENTS.md`.
