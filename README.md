@@ -104,3 +104,60 @@ Se sua aplicação utilizar **banco de dados relacional** (como PostgreSQL, MySQ
 - 📩 Envie o link do seu repositório para o e-mail:
   - ti@profissionaissa.com
   - Com cópia para: jonata.martins@profissionaissa.com
+
+---
+
+# 🧑🏽‍💻 Implementação
+
+Status atual: **API completa** (autenticação JWT, categorias, movimentações + resumo, testes unitários e e2e, Swagger). A UI (Next.js) está como scaffold — o planejamento da UI está em `docs/tasks.md`.
+
+## Stack
+
+- **API:** NestJS 11 · Fastify · Drizzle ORM + SQLite · Zod · JWT + bcrypt · Swagger · Jest
+- **UI:** Next.js 15 (App Router) · React 19 · Tailwind CSS v4 (scaffold)
+
+## Como rodar a API
+
+```bash
+cd api
+npm install
+cp .env.example .env      # ajuste JWT_SECRET
+npm run start:dev         # http://localhost:3001
+```
+
+- Swagger: http://localhost:3001/swagger
+- Migrations são aplicadas automaticamente na inicialização (nenhuma etapa manual).
+- Instruções completas (variáveis de ambiente, endpoints, testes, migrations): [`api/README.md`](./api/README.md).
+
+## Como rodar a UI (scaffold)
+
+```bash
+cd ui
+npm install
+npm run dev               # http://localhost:3000
+```
+
+## Testes
+
+```bash
+cd api
+npm test                  # unitários
+npm run test:e2e          # e2e
+npm run lint
+```
+
+## Estrutura
+
+```text
+docs/            # spec-driven: docs/specs/ (o quê) + docs/adr/ (por quê) + tasks.md (roadmap)
+api/             # backend NestJS (camadas: controllers/services/repositories/dto/entities)
+ui/              # frontend Next.js
+```
+
+## Documentação
+
+- Especificações e critérios de aceitação: [`docs/specs/`](./docs/specs/)
+- Decisões de arquitetura (ADRs 0001–0003): [`docs/adr/`](./docs/adr/)
+- Roadmap de implementação: [`docs/tasks.md`](./docs/tasks.md)
+- Guia operacional da API: [`api/README.md`](./api/README.md)
+

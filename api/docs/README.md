@@ -1,28 +1,22 @@
 # 🔧 Documentação da API
 
-Backend NestJS da aplicação de movimentações financeiras.
+Documentação operacional do backend NestJS da aplicação de movimentações financeiras.
 
 ## Stack
 
 - **NestJS 11** com adapter **Fastify**
-- **Swagger** (`@nestjs/swagger`) — documentação interativa em `/swagger`
-- TypeScript · Jest (testes unitários e e2e)
+- **Drizzle ORM** + **SQLite** (`better-sqlite3`) — migrations via `drizzle-kit` (auto-aplicadas no boot)
+- **Zod** + `nestjs-zod` (DTOs com validação e integração Swagger)
+- **JWT** (HS256) + **bcrypt** (cost 12)
+- **Swagger** em `/swagger` · **Jest** (unit + e2e)
 
-## Como rodar
+## Guias rápidos
 
-```bash
-npm install
-npm run start:dev       # dev com watch → http://localhost:3001
-npm run build && npm run start:prod
-npm test                # testes unitários
-npm run test:e2e        # testes e2e
-```
+- **Como rodar / instalar / testar:** [`api/README.md`](../README.md) — guia operacional completo (install, `.env`, variáveis, endpoints, migrations).
+- **Convenções de código:** [`api/AGENTS.md`](../AGENTS.md) — estrutura em camadas (ADR-0003), DTOs, Drizzle.
 
-- Porta configurável via `PORT` (default `3001`).
-- CORS liberado (habilitado no bootstrap).
+## Documentação do projeto
 
-## Documentação
-
-- Especificações da aplicação: [`docs/specs/`](../../docs/specs/)
-- Decisões de arquitetura: [`docs/adr/`](../../docs/adr/)
-- Especificações específicas da API serão listadas aqui quando criadas.
+- Especificações de funcionalidades (contratos/aceitação): [`docs/specs/`](../../docs/specs/)
+- Architecture Decision Records: [`docs/adr/`](../../docs/adr/)
+- Roadmap de implementação: [`docs/tasks.md`](../../docs/tasks.md)

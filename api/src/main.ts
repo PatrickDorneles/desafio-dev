@@ -20,6 +20,9 @@ async function bootstrap() {
     )
     .setVersion('1.0')
     .addBearerAuth()
+    .addTag('auth')
+    .addTag('categories')
+    .addTag('transactions')
     .addTag('health')
     .build();
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);

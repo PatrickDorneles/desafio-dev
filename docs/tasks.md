@@ -43,9 +43,9 @@ Convenções: `AGENTS.md` (raiz + `api/`), ADRs 0001–0003, skills `drizzle-sql
 
 ## Fase 4 — Finalização
 
-- [ ] **T-040 READMEs (root + api)** — instruções completas e verificadas: install, `.env`, migrate, start, swagger. *Verificar:* seguir o README do zero em diretório limpo.
-- [ ] **T-041 Revisão Swagger** — todos os endpoints documentados (schemas, erros, tags, Bearer). *Verificar:* inspeção em `/swagger`.
-- [ ] **T-042 Verificação total** — `npm run build` · `npm run lint` · `npm test` · `npm run test:e2e` passando do zero. *Verificar:* CI-like run.
+- [x] **T-040 READMEs (root + api)** — instruções completas e verificadas: install, `.env`, migrate, start, swagger. *Verificar:* seguir o README do zero em diretório limpo.
+- [x] **T-041 Revisão Swagger** — todos os endpoints documentados (schemas, erros, tags, Bearer). *Verificar:* inspeção em `/swagger`.
+- [x] **T-042 Verificação total** — `npm run build` · `npm run lint` · `npm test` · `npm run test:e2e` passando do zero. *Verificar:* CI-like run.
 
 ## Fora de escopo (por decisão)
 
