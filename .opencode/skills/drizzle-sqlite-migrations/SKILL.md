@@ -17,7 +17,7 @@ Project conventions for schema definitions and migrations in `api/`.
 
 - Primary keys: `text('id').primaryKey()` (UUID) or integer `autoincrement` — pick one per table and stay consistent.
 - Timestamps: integer (unix ms) or text ISO — pick one convention for the whole project; use `.$defaultFn(() => Date.now())` for `created_at`.
-- Foreign keys: `.references(() => otherTable, { onDelete: 'cascade' })` on the FK column.
+- Foreign keys: `.references(() => otherTable.column, { onDelete: 'cascade' })` — reference the **specific column** (drizzle-orm ≥0.45 rejects table references), e.g. `.references(() => users.id, { onDelete: 'cascade' })`.
 - SQLite has **no enums** — use `text` columns + Zod validation (`z.enum`, see the `zod-shared-schemas` skill).
 
 ## Relations

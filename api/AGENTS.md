@@ -39,7 +39,7 @@ src/
 
 - Import from `drizzle-orm/sqlite-core` (`sqliteTable`, `text`, `integer`, `real`) — never `pg-core`.
 - No raw SQL. All queries through Drizzle builders (parameterized, typed).
-- Foreign keys: `.references(() => table, { onDelete: 'cascade' })` on the FK column.
+- Foreign keys: `.references(() => table.column, { onDelete: 'cascade' })` — drizzle-orm ≥0.45 requires referencing the specific column (e.g. `.references(() => users.id, { onDelete: 'cascade' })`), not the table.
 - Query relations: also declare `relations()` on both sides — `.references()` alone does not power the query API.
 - `findFirst()` returns `undefined` when absent — handle explicitly.
 - Migrations: `drizzle-kit generate` → review SQL → `drizzle-kit migrate`. See the `drizzle-sqlite-migrations` skill.

@@ -25,12 +25,12 @@ Convenções: `AGENTS.md` (raiz + `api/`), ADRs 0001–0003, skills `drizzle-sql
 
 ## Fase 2 — Categorias (Spec 002)
 
-- [ ] **T-020 Entidade `categories` + migration** — `(userId, name)` único, FK `users` com cascade. *Verificar:* migration aplicada.
-- [ ] **T-021 DTOs de categorias** — `create` e `update` (validação nome/cor/ícone). *Verificar:* build.
-- [ ] **T-022 Repository de categorias** — CRUD filtrado por `userId`; checagem de nome duplicado (case-insensitive). *Verificar:* unit tests.
-- [ ] **T-023 Service de categorias** — propriedade (`404` sem distinção), unicidade (`409`), validações. *Verificar:* unit tests.
-- [ ] **T-024 Controller de categorias** — CRUD completo + Swagger. *Verificar:* e2e.
-- [ ] **T-025 Testes de categorias** — unit + e2e: CRUD, isolamento entre usuários, `404` sem vazamento. *Verificar:* `npm test` + `npm run test:e2e`.
+- [x] **T-020 Entidade `categories` + migration** — `(userId, name)` único, FK `users` com cascade. *Verificar:* migration aplicada.
+- [x] **T-021 DTOs de categorias** — `create` e `update` (validação nome/cor/ícone). *Verificar:* build.
+- [x] **T-022 Repository de categorias** — CRUD filtrado por `userId`; checagem de nome duplicado (case-insensitive). *Verificar:* unit tests.
+- [x] **T-023 Service de categorias** — propriedade (`404` sem distinção), unicidade (`409`), validações. *Verificar:* unit tests.
+- [x] **T-024 Controller de categorias** — CRUD completo + Swagger. *Verificar:* e2e.
+- [x] **T-025 Testes de categorias** — unit + e2e: CRUD, isolamento entre usuários, `404` sem vazamento. *Verificar:* `npm test` + `npm run test:e2e`.
 
 ## Fase 3 — Movimentações (Spec 003)
 
