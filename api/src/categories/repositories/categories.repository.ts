@@ -47,6 +47,17 @@ export class CategoriesRepository {
       .get();
   }
 
+  /** FR-003 (Spec 003): cheap existence check used by the transactions service. */
+  existsByIdAndUserId(id: string, userId: string): boolean {
+    return (
+      this.db
+        .select({ id: categories.id })
+        .from(categories)
+        .where(and(eq(categories.id, id), eq(categories.userId, userId)))
+        .get() !== undefined
+    );
+  }
+
   /** Case-insensitive duplicate pre-check (FR-002). Parameterized — no string concat. */
   findByNameForUser(userId: string, name: string): CategoryRow | undefined {
     return this.db

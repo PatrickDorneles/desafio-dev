@@ -34,12 +34,12 @@ Convenções: `AGENTS.md` (raiz + `api/`), ADRs 0001–0003, skills `drizzle-sql
 
 ## Fase 3 — Movimentações (Spec 003)
 
-- [ ] **T-030 Entidade `transactions` + migration** — FK `categories` com `SET NULL`, índice `(userId, date)`. *Verificar:* migration aplicada.
-- [ ] **T-031 DTOs de transações** — `create`, `update`, `summary` (type/amount/date/categoryId). *Verificar:* build.
-- [ ] **T-032 Repository de transações** — CRUD + agregações do resumo (income/expense). *Verificar:* unit tests.
-- [ ] **T-033 Service de transações** — validação de categoria (regra `400`), cálculo do resumo, regras de propriedade. *Verificar:* unit tests.
-- [ ] **T-034 Controller de transações** — CRUD + `GET /transactions/summary` **antes** de `GET /transactions/:id` (ordem de rotas!) + Swagger. *Verificar:* e2e.
-- [ ] **T-035 Testes de transações** — unit + e2e: CRUD, isolamento, resumo (CA-007/CA-008), SET NULL via exclusão de categoria (cross-spec). *Verificar:* `npm test` + `npm run test:e2e`.
+- [x] **T-030 Entidade `transactions` + migration** — FK `categories` com `SET NULL`, índice `(userId, date)`. *Verificar:* migration aplicada.
+- [x] **T-031 DTOs de transações** — `create`, `update`, `summary` (type/amount/date/categoryId). *Verificar:* build.
+- [x] **T-032 Repository de transações** — CRUD + agregações do resumo (income/expense). *Verificar:* unit tests.
+- [x] **T-033 Service de transações** — validação de categoria (regra `400`), cálculo do resumo, regras de propriedade. *Verificar:* unit tests.
+- [x] **T-034 Controller de transações** — CRUD + `GET /transactions/summary` **antes** de `GET /transactions/:id` (ordem de rotas!) + Swagger. *Verificar:* e2e.
+- [x] **T-035 Testes de transações** — unit + e2e: CRUD, isolamento, resumo (CA-007/CA-008), SET NULL via exclusão de categoria (cross-spec). *Verificar:* `npm test` + `npm run test:e2e`.
 
 ## Fase 4 — Finalização
 
