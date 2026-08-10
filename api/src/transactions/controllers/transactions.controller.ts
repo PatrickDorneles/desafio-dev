@@ -21,11 +21,8 @@ import { CreateTransactionDto } from '../dto/create-transaction.dto';
 import { TransactionResponseDto } from '../dto/transaction-response.dto';
 import { TransactionSummaryDto } from '../dto/transaction-summary.dto';
 import { UpdateTransactionDto } from '../dto/update-transaction.dto';
-import { TransactionRow } from '../entities/transaction.entity';
-import {
-  TransactionsService,
-  TransactionSummary,
-} from '../services/transactions.service';
+import { TransactionsService } from '../services/transactions.service';
+import { TransactionRow, TransactionSummary } from '../types/transaction.types';
 
 /**
  * Spec 003, §9. All routes protected by the global JwtAuthGuard (no @Public,

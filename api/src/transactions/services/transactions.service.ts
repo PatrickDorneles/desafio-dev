@@ -6,17 +6,12 @@ import {
 import { CategoriesRepository } from '../../categories/repositories/categories.repository';
 import { CreateTransactionDto } from '../dto/create-transaction.dto';
 import { UpdateTransactionDto } from '../dto/update-transaction.dto';
-import { TransactionRow } from '../entities/transaction.entity';
+import { TransactionsRepository } from '../repositories/transactions.repository';
 import {
-  TransactionsRepository,
+  TransactionRow,
+  TransactionSummary,
   UpdateTransactionData,
-} from '../repositories/transactions.repository';
-
-export interface TransactionSummary {
-  totalIncomeCents: number;
-  totalExpenseCents: number;
-  balanceCents: number;
-}
+} from '../types/transaction.types';
 
 /**
  * Domain logic for transactions (ADR-0003). All methods scope by `userId` from

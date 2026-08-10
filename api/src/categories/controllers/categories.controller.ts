@@ -20,8 +20,8 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { CategoryResponseDto } from '../dto/category-response.dto';
 import { CreateCategoryDto } from '../dto/create-category.dto';
 import { UpdateCategoryDto } from '../dto/update-category.dto';
-import { CategoryRow } from '../entities/category.entity';
 import { CategoriesService } from '../services/categories.service';
+import { CategoryRow } from '../types/category.types';
 
 /**
  * Spec 002, §9. All routes protected by the global JwtAuthGuard (no @Public,

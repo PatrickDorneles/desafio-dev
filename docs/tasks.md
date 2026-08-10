@@ -50,6 +50,7 @@ Convenções: `AGENTS.md` (raiz + `api/`), ADRs 0001–0003, skills `drizzle-sql
 ## Fase 5 — Refatoração (pós-revisão)
 
 - [x] **T-043 Módulo `users` (entity-per-module, ADR-0004)** — entidade `users` + `UsersRepository` movidos de `auth/` para `src/users/`; `UsersModule` exporta o repositório; `auth` importa `UsersModule` e não possui mais entidade. *Verificar:* `npm run build` · `npm test` · `npm run test:e2e`.
+- [ ] **T-044 Tipos por módulo em `types/` (ADR-0005)** — serviços/repositórios/entidades deixam de exportar tipos: `types/auth.types.ts`, `types/user.types.ts`, `types/category.types.ts`, `types/transaction.types.ts`, `common/types/` (envelope, current-user); entidades exportam só o schema; services/repos exportam só a classe; DTOs mantêm schema + `z.infer`. *Verificar:* `npm run lint` · `npm run build` · `npm test` · `npm run test:e2e`.
 
 ## Fora de escopo (por decisão)
 

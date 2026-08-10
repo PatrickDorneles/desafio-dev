@@ -10,31 +10,14 @@ import {
   BCRYPT_SALT_ROUNDS,
   DUMMY_HASH,
 } from '../../common/constants/auth.constants';
-import { UserRow } from '../../users/entities/users.entity';
+import { UserRow } from '../../users/types/user.types';
 import { UsersRepository } from '../../users/repositories/users.repository';
-
-export interface UserProfile {
-  id: string;
-  name: string;
-  email: string;
-  createdAt: number;
-}
-
-export interface RegisterInput {
-  name: string;
-  email: string;
-  password: string;
-}
-
-export interface LoginInput {
-  email: string;
-  password: string;
-}
-
-export interface LoginResult {
-  accessToken: string;
-  user: UserProfile;
-}
+import {
+  LoginInput,
+  LoginResult,
+  RegisterInput,
+  UserProfile,
+} from '../types/auth.types';
 
 @Injectable()
 export class AuthService {

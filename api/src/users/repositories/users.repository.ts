@@ -2,13 +2,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { DRIZZLE } from '../../common/constants/database.constants';
-import { users, UserRow } from '../entities/users.entity';
-
-export interface CreateUserData {
-  name: string;
-  email: string;
-  passwordHash: string;
-}
+import { users } from '../entities/users.entity';
+import { CreateUserData, UserRow } from '../types/user.types';
 
 /**
  * Only layer that touches Drizzle for the `users` table (ADR-0003).

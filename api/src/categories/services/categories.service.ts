@@ -5,11 +5,8 @@ import {
 } from '@nestjs/common';
 import { CreateCategoryDto } from '../dto/create-category.dto';
 import { UpdateCategoryDto } from '../dto/update-category.dto';
-import { CategoryRow } from '../entities/category.entity';
-import {
-  CategoriesRepository,
-  UpdateCategoryData,
-} from '../repositories/categories.repository';
+import { CategoriesRepository } from '../repositories/categories.repository';
+import { CategoryRow, UpdateCategoryData } from '../types/category.types';
 
 /**
  * Domain logic for categories (ADR-0003). All methods scope by `userId` from

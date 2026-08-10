@@ -1,6 +1,6 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { CategoryRow } from '../entities/category.entity';
+import { CategoryRow } from '../types/category.types';
 import { CategoriesRepository } from '../repositories/categories.repository';
 import { CategoriesService } from './categories.service';
 

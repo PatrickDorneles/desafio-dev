@@ -8,10 +8,7 @@ import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { FastifyRequest } from 'fastify';
 import { IS_PUBLIC_KEY } from '../../common/decorators/public.decorator';
-
-export interface JwtUser {
-  sub: string;
-}
+import { JwtUser } from '../types/auth.types';
 
 type AuthenticatedRequest = FastifyRequest & { user?: JwtUser };
 

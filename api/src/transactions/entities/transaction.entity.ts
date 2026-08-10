@@ -36,5 +36,3 @@ export const transactions = sqliteTable(
     index('transactions_user_id_date_idx').on(table.userId, table.date),
   ],
 );
-
-export type TransactionRow = typeof transactions.$inferSelect;

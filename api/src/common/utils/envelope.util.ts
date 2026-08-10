@@ -1,8 +1,4 @@
-export interface ErrorEnvelope {
-  statusCode: number;
-  message: string | string[];
-  error: string;
-}
+import { ErrorEnvelope } from '../types/error-envelope';
 
 export function buildErrorEnvelope(
   statusCode: number,

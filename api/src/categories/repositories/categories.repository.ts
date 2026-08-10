@@ -2,21 +2,12 @@ import { Inject, Injectable } from '@nestjs/common';
 import { and, eq, sql } from 'drizzle-orm';
 import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { DRIZZLE } from '../../common/constants/database.constants';
-import { categories, CategoryRow } from '../entities/category.entity';
-
-export interface CreateCategoryData {
-  userId: string;
-  name: string;
-  color?: string;
-  icon?: string;
-}
-
-export interface UpdateCategoryData {
-  name?: string;
-  color?: string;
-  icon?: string;
-  updatedAt: number;
-}
+import { categories } from '../entities/category.entity';
+import {
+  CategoryRow,
+  CreateCategoryData,
+  UpdateCategoryData,
+} from '../types/category.types';
 
 /**
  * Only layer that touches Drizzle for the `categories` table (ADR-0003).

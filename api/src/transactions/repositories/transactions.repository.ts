@@ -2,27 +2,13 @@ import { Inject, Injectable } from '@nestjs/common';
 import { and, desc, eq, sum } from 'drizzle-orm';
 import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { DRIZZLE } from '../../common/constants/database.constants';
-import { transactions, TransactionRow } from '../entities/transaction.entity';
-
-export type TransactionType = 'INCOME' | 'EXPENSE';
-
-export interface CreateTransactionData {
-  userId: string;
-  categoryId: string | null;
-  type: TransactionType;
-  amountCents: number;
-  description: string;
-  date: string;
-}
-
-export interface UpdateTransactionData {
-  categoryId?: string | null;
-  type?: TransactionType;
-  amountCents?: number;
-  description?: string;
-  date?: string;
-  updatedAt: number;
-}
+import { transactions } from '../entities/transaction.entity';
+import {
+  CreateTransactionData,
+  TransactionRow,
+  TransactionType,
+  UpdateTransactionData,
+} from '../types/transaction.types';
 
 /**
  * Only layer that touches Drizzle for the `transactions` table (ADR-0003).

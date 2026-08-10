@@ -26,5 +26,3 @@ export const users = sqliteTable(
   },
   (table) => [uniqueIndex('users_email_unique').on(table.email)],
 );
-
-export type UserRow = typeof users.$inferSelect;

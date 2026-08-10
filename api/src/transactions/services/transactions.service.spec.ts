@@ -1,7 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { CategoriesRepository } from '../../categories/repositories/categories.repository';
-import { TransactionRow } from '../entities/transaction.entity';
+import { TransactionRow } from '../types/transaction.types';
 import { TransactionsRepository } from '../repositories/transactions.repository';
 import { TransactionsService } from './transactions.service';
 

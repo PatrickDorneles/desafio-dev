@@ -35,5 +35,3 @@ export const categories = sqliteTable(
     uniqueIndex('categories_user_id_name_unique').on(table.userId, table.name),
   ],
 );
-
-export type CategoryRow = typeof categories.$inferSelect;

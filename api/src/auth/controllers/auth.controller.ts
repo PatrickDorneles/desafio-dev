@@ -18,11 +18,8 @@ import { Public } from '../../common/decorators/public.decorator';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
 import { UserProfileDto } from '../dto/user-profile.dto';
-import {
-  AuthService,
-  LoginResult,
-  UserProfile,
-} from '../services/auth.service';
+import { AuthService } from '../services/auth.service';
+import { LoginResult, UserProfile } from '../types/auth.types';
 
 @ApiTags('auth')
 @Controller('auth')

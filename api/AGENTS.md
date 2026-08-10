@@ -16,6 +16,7 @@ Layered, module-per-feature structure — see **ADR-0003** (`docs/adr/0003-arqui
 ```text
 src/
 ├── common/                 # global, no module ties
+│   ├── types/              # global cross-module types (error envelope, user payload)
 │   ├── utils/              # reusable helpers
 │   └── constants/          # immutable values (keys, names)
 └── <feature>/
@@ -24,10 +25,12 @@ src/
     ├── services/           # domain logic
     ├── repositories/       # ORM integration (Drizzle) — consumed by services
     ├── dto/                # Zod schemas per function (create/update/login…)
-    └── entities/           # Drizzle schema of the module
+    ├── entities/           # Drizzle schema of the module
+    └── types/              # module-level types/interfaces
 ```
 
 - DI via constructor injection; default provider scope (singleton); `forwardRef` only for circular dependencies.
+- **Minimal exports, types in `types/` (ADR-0005):** each file exports only what its responsibility requires. Module-level types and interfaces (row types `$inferSelect`, service I/O shapes, repository data payloads, unions like `TransactionType`) live in `src/<module>/types/`. Entity files export only the schema; service and repository files export only the class; DTO files keep schema + inferred `z.infer` type together. Global cross-module types live in `src/common/types/`. A type stays in its implementation file only if strictly local (not exported).
 - **Entity-per-module (ADR-0004):** every Drizzle entity lives in its own module — `src/<entity>/` owns `entities/` (schema) + `repositories/` and **exports its repository** (`exports: [XxxRepository]`). Consumer modules import the owner module and inject the exported repository (e.g. `auth` imports `UsersModule` and uses `UsersRepository` in `AuthService`; `auth` owns no entity). FKs between tables import the owner entity file directly (`src/users/entities/users.entity`).
 - **Layer discipline (SOLID/DRY):** controllers stay thin — no ORM calls; services hold domain logic — no raw DTO shaping; repositories are the only layer touching Drizzle. Reusable logic lives in `src/common/utils/` or shared services.
 - Pipeline: Middleware → Guards → Interceptors → Pipes → Handler.

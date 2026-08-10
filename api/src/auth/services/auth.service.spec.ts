@@ -10,7 +10,7 @@ import {
   BCRYPT_SALT_ROUNDS,
   DUMMY_HASH,
 } from '../../common/constants/auth.constants';
-import { UserRow } from '../../users/entities/users.entity';
+import { UserRow } from '../../users/types/user.types';
 import { UsersRepository } from '../../users/repositories/users.repository';
 import { AuthService } from './auth.service';
 
