@@ -6,11 +6,11 @@ Convenções: `AGENTS.md` (raiz + `api/`), ADRs 0001–0003, skills `drizzle-sql
 
 ## Fase 0 — Fundação
 
-- [ ] **T-001 Config de ambiente** — `@nestjs/config` + `.env` (`PORT`, `JWT_SECRET`, `DB_PATH`, `JWT_EXPIRES_IN`) + `.env.example`. *Verificar:* `npm run start:dev` lê o `.env`.
-- [ ] **T-002 Integração Drizzle** — `drizzle-orm` + `better-sqlite3`, `drizzle.config.ts`, módulo/provider global de conexão. *Verificar:* `npm run build` e `npx drizzle-kit check`.
-- [ ] **T-003 Estrutura base + envelope de erro** — `src/common/utils/`, `src/common/constants/`, filtro global de exceções que normaliza `{ statusCode, message, error }`. *Verificar:* rota que lança erro retorna o envelope.
-- [ ] **T-004 Swagger aprimorado** — título/descrição, `addBearerAuth()`, tags por módulo. *Verificar:* `/swagger` mostra o esquema Bearer.
-- [ ] **T-005 Health** — `GET /health` → `{ status: "ok" }`. *Verificar:* curl → `200`.
+- [x] **T-001 Config de ambiente** — `@nestjs/config` + `.env` (`PORT`, `JWT_SECRET`, `DB_PATH`, `JWT_EXPIRES_IN`) + `.env.example`. *Verificar:* `npm run start:dev` lê o `.env`.
+- [x] **T-002 Integração Drizzle** — `drizzle-orm` + `better-sqlite3`, `drizzle.config.ts`, módulo/provider global de conexão. *Verificar:* `npm run build` e `npx drizzle-kit check`.
+- [x] **T-003 Estrutura base + envelope de erro** — `src/common/utils/`, `src/common/constants/`, filtro global de exceções que normaliza `{ statusCode, message, error }`. *Verificar:* rota que lança erro retorna o envelope.
+- [x] **T-004 Swagger aprimorado** — título/descrição, `addBearerAuth()`, tags por módulo. *Verificar:* `/swagger` mostra o esquema Bearer.
+- [x] **T-005 Health** — `GET /health` → `{ status: "ok" }`. *Verificar:* curl → `200`.
 
 ## Fase 1 — Autenticação e Usuários (Spec 001)
 
