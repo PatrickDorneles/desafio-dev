@@ -5,17 +5,18 @@ import { FastifyAdapter } from '@nestjs/platform-fastify';
 import { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { ZodValidationPipe } from './common/pipes/zod-validation.pipe';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter()
+    new FastifyAdapter(),
   );
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Desafio Técnico - Backend')
     .setDescription(
-      'API do desafio técnico de transações financeiras: autenticação JWT, categorias e movimentações.'
+      'API do desafio técnico de transações financeiras: autenticação JWT, categorias e movimentações.',
     )
     .setVersion('1.0')
     .addBearerAuth()
@@ -29,10 +30,11 @@ async function bootstrap() {
   });
 
   app.useGlobalFilters(new GlobalExceptionFilter());
+  app.useGlobalPipes(new ZodValidationPipe());
 
   const configService = app.get(ConfigService);
   const port = Number(configService.get('PORT', 3001));
 
   await app.listen(port, '0.0.0.0');
 }
-bootstrap();
+void bootstrap();

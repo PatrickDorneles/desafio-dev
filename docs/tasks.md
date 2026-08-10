@@ -14,14 +14,14 @@ Convenções: `AGENTS.md` (raiz + `api/`), ADRs 0001–0003, skills `drizzle-sql
 
 ## Fase 1 — Autenticação e Usuários (Spec 001)
 
-- [ ] **T-010 Entidade `users` + migration** — schema Drizzle em `auth/entities/`; `drizzle-kit generate` + `migrate`. *Verificar:* tabela `users` criada.
-- [ ] **T-011 DTOs de auth** — `register`, `login` (e resposta de `me`) via `nestjs-zod` em `auth/dto/`. *Verificar:* build + Swagger mostra schemas.
-- [ ] **T-012 Repository `users`** — `auth/repositories/`: `findByEmail`, `create`. *Verificar:* testes unitários com mock.
-- [ ] **T-013 Service de auth** — registro (bcrypt, e-mail normalizado, `409`), login (`401` genérico, assinatura JWT), `me`. *Verificar:* unit tests.
-- [ ] **T-014 JWT + guards** — `JwtModule`, guard global com decorator `@Public()`, decorator `currentUser`. *Verificar:* rotas protegidas retornam `401` sem token.
-- [ ] **T-015 Controller de auth** — `POST /auth/register`, `POST /auth/login`, `GET /auth/me` + decorators Swagger. *Verificar:* e2e/supertest.
-- [ ] **T-016 Testes e2e de auth** — register/login/me, `409` duplicado, `401`, isolamento entre usuários. *Verificar:* `npm run test:e2e`.
-- [ ] **T-017 Testes unitários do service de auth** — hashing, erros, token. *Verificar:* `npm test`.
+- [x] **T-010 Entidade `users` + migration** — schema Drizzle em `auth/entities/`; `drizzle-kit generate` + `migrate`. *Verificar:* tabela `users` criada.
+- [x] **T-011 DTOs de auth** — `register`, `login` (e resposta de `me`) via `nestjs-zod` em `auth/dto/`. *Verificar:* build + Swagger mostra schemas.
+- [x] **T-012 Repository `users`** — `auth/repositories/`: `findByEmail`, `create`. *Verificar:* testes unitários com mock.
+- [x] **T-013 Service de auth** — registro (bcrypt, e-mail normalizado, `409`), login (`401` genérico, assinatura JWT), `me`. *Verificar:* unit tests.
+- [x] **T-014 JWT + guards** — `JwtModule`, guard global com decorator `@Public()`, decorator `currentUser`. *Verificar:* rotas protegidas retornam `401` sem token.
+- [x] **T-015 Controller de auth** — `POST /auth/register`, `POST /auth/login`, `GET /auth/me` + decorators Swagger. *Verificar:* e2e/supertest.
+- [x] **T-016 Testes e2e de auth** — register/login/me, `409` duplicado, `401`, isolamento entre usuários. *Verificar:* `npm run test:e2e`.
+- [x] **T-017 Testes unitários do service de auth** — hashing, erros, token. *Verificar:* `npm test`.
 
 ## Fase 2 — Categorias (Spec 002)
 
