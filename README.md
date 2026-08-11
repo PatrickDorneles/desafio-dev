@@ -127,6 +127,7 @@ npm run start:dev         # http://localhost:3001
 
 - Swagger: http://localhost:3001/swagger
 - Migrations são aplicadas automaticamente na inicialização (nenhuma etapa manual).
+- **Banco dual-driver (ADR-0010):** sem `TURSO_DATABASE_URL` → SQLite local (`DB_PATH`); definido → Turso/libSQL remoto (deploy, dado persistido).
 - Instruções completas (variáveis de ambiente, endpoints, testes, migrations): [`api/README.md`](./api/README.md).
 
 ## Como rodar a UI

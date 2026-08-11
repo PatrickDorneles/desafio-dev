@@ -5,7 +5,7 @@ Backend da aplicação de **movimentações financeiras** (desafio técnico). AP
 ## Stack
 
 - **NestJS 11** com adapter **Fastify**
-- **Drizzle ORM** + **SQLite** (`better-sqlite3`) — migrations com `drizzle-kit`
+- **Drizzle ORM** + **SQLite** — dual-driver: `better-sqlite3` (local/dev) ou **Turso** (`libsql` remoto, deploy) — migrations com `drizzle-kit`
 - **Zod** (schemas de validação via `nestjs-zod`) — fonte única dos contratos
 - **JWT** (`@nestjs/jwt`, HS256) + **bcrypt** (cost 12)
 - **Swagger** (`@nestjs/swagger`) — documentação interativa em `/swagger`
@@ -27,6 +27,10 @@ npm run start:dev           # http://localhost:3001
 
 O servidor **aplica as migrations automaticamente** na inicialização (tabelas `users`, `categories`, `transactions`). Nenhuma etapa manual de migração é necessária para rodar.
 
+**Dois modos de banco (ADR-0010):**
+- **Local (dev/testes):** SQLite em arquivo — `DB_PATH` (default `./data/app.db`). O servidor não inicia com banco remoto configurado? É este modo.
+- **Turso (produção/deploy):** defina `TURSO_DATABASE_URL` (ex: `libsql://...`) e, se exigido, `TURSO_AUTH_TOKEN`. As mesmas migrations `./drizzle` são aplicadas no boot; dado fica persistido na nuvem.
+
 - **Swagger:** http://localhost:3001/swagger
 - **Health check:** `GET /health` → `{ "status": "ok" }`
 
@@ -37,7 +41,9 @@ O servidor **aplica as migrations automaticamente** na inicialização (tabelas 
 | `PORT` | `3001` | Porta do servidor |
 | `JWT_SECRET` | *(obrigatório)* | Segredo para assinar JWTs (mín. 16 caracteres) |
 | `JWT_EXPIRES_IN` | `1h` | Expiração do token (formato `jsonwebtoken`, ex: `1h`, `7d`) |
-| `DB_PATH` | `./data/app.db` | Caminho do arquivo SQLite |
+| `DB_PATH` | `./data/app.db` | Arquivo SQLite (modo local) |
+| `TURSO_DATABASE_URL` | *(vazio)* | URL do banco Turso (ex: `libsql://...`). Definir = modo Turso; vazio = modo local |
+| `TURSO_AUTH_TOKEN` | *(vazio)* | Token de autenticação do Turso (exigido para acesso remoto autenticado) |
 
 > ⚠️ `JWT_SECRET` é obrigatório — o servidor **não inicia** sem ele (fail-fast no boot). Para produção, use um segredo forte gerado por ferramenta adequada; nunca commite o `.env`.
 
