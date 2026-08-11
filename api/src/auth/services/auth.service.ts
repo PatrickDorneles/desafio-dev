@@ -36,7 +36,7 @@ export class AuthService {
 
     // Pre-check avoids a wasted bcrypt hash on duplicates (FR-011); the DB
     // unique constraint still guards the concurrent race below.
-    const existing = this.usersRepository.findByEmail(normalizedEmail);
+    const existing = await this.usersRepository.findByEmail(normalizedEmail);
     if (existing) {
       throw new ConflictException('Email already registered');
     }
@@ -44,7 +44,7 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
 
     try {
-      const user = this.usersRepository.create({
+      const user = await this.usersRepository.create({
         name,
         email: normalizedEmail,
         passwordHash,
@@ -64,7 +64,7 @@ export class AuthService {
 
   async login({ email, password }: LoginInput): Promise<LoginResult> {
     const normalizedEmail = email.trim().toLowerCase();
-    const user = this.usersRepository.findByEmail(normalizedEmail);
+    const user = await this.usersRepository.findByEmail(normalizedEmail);
 
     // Always run bcrypt.compare — against the real hash or a dummy one for
     // unknown emails — so response timing does not reveal whether the email
@@ -84,8 +84,8 @@ export class AuthService {
     return { accessToken, user: this.toProfile(user) };
   }
 
-  getProfile(userId: string): UserProfile {
-    const user = this.usersRepository.findById(userId);
+  async getProfile(userId: string): Promise<UserProfile> {
+    const user = await this.usersRepository.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }

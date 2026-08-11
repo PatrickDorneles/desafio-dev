@@ -29,7 +29,9 @@ export class AuthController {
 
   @Public()
   @Post('register')
-  @ApiOperation({ summary: 'Register a new user (auto-login, Spec 004 FR-002)' })
+  @ApiOperation({
+    summary: 'Register a new user (auto-login, Spec 004 FR-002)',
+  })
   @ApiResponse({
     status: 201,
     description: 'User created with access token',
@@ -77,7 +79,7 @@ export class AuthController {
     type: UserProfileDto,
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  me(@CurrentUser() user: CurrentUserPayload): UserProfile {
+  me(@CurrentUser() user: CurrentUserPayload): Promise<UserProfile> {
     return this.authService.getProfile(user.id);
   }
 }

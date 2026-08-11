@@ -59,7 +59,7 @@ export class TransactionsController {
   create(
     @Body() dto: CreateTransactionDto,
     @CurrentUser() user: CurrentUserPayload,
-  ): TransactionRow {
+  ): Promise<TransactionRow> {
     return this.transactionsService.create(user.id, dto);
   }
 
@@ -75,7 +75,7 @@ export class TransactionsController {
   findAll(
     @CurrentUser() user: CurrentUserPayload,
     @Query() query: PaginationQueryDto,
-  ): TransactionPage {
+  ): Promise<TransactionPage> {
     return this.transactionsService.findAll(user.id, query);
   }
 
@@ -87,7 +87,9 @@ export class TransactionsController {
     type: TransactionSummaryDto,
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  getSummary(@CurrentUser() user: CurrentUserPayload): TransactionSummary {
+  getSummary(
+    @CurrentUser() user: CurrentUserPayload,
+  ): Promise<TransactionSummary> {
     return this.transactionsService.getSummary(user.id);
   }
 
@@ -104,7 +106,7 @@ export class TransactionsController {
   findOne(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: CurrentUserPayload,
-  ): TransactionRow {
+  ): Promise<TransactionRow> {
     return this.transactionsService.findOne(user.id, id);
   }
 
@@ -125,7 +127,7 @@ export class TransactionsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateTransactionDto,
     @CurrentUser() user: CurrentUserPayload,
-  ): TransactionRow {
+  ): Promise<TransactionRow> {
     return this.transactionsService.update(user.id, id, dto);
   }
 
@@ -139,7 +141,7 @@ export class TransactionsController {
   remove(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: CurrentUserPayload,
-  ): void {
-    this.transactionsService.remove(user.id, id);
+  ): Promise<void> {
+    return this.transactionsService.remove(user.id, id);
   }
 }

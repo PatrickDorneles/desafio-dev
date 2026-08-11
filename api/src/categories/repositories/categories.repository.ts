@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, eq, sql } from 'drizzle-orm';
 import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
+import { LibSQLDatabase } from 'drizzle-orm/libsql';
 import { DRIZZLE } from '../../common/constants/database.constants';
 import { categories } from '../entities/category.entity';
 import {
@@ -11,17 +12,22 @@ import {
 
 /**
  * Only layer that touches Drizzle for the `categories` table (ADR-0003).
- * better-sqlite3 is synchronous, so these methods are intentionally NOT async;
- * `findFirst`/`.get()` return `undefined` when absent — handled explicitly.
+ * Dual-driver: better-sqlite3 is synchronous, libsql (Turso) is async — so
+ * every method is async and awaits Drizzle calls uniformly (awaiting a sync
+ * better-sqlite3 result is a no-op at runtime). `findFirst`/`.get()` return
+ * `undefined` when absent — handled explicitly.
  * Every query filters by `userId` (SC-001) — never by request data.
  */
 @Injectable()
 export class CategoriesRepository {
-  constructor(@Inject(DRIZZLE) private readonly db: BetterSQLite3Database) {}
+  constructor(
+    @Inject(DRIZZLE)
+    private readonly db: BetterSQLite3Database | LibSQLDatabase,
+  ) {}
 
   /** FR-003: own categories only, ordered by name case-insensitively. */
-  findAllByUserId(userId: string): CategoryRow[] {
-    return this.db
+  async findAllByUserId(userId: string): Promise<CategoryRow[]> {
+    return await this.db
       .select()
       .from(categories)
       .where(eq(categories.userId, userId))
@@ -30,8 +36,11 @@ export class CategoriesRepository {
   }
 
   /** FR-004: scoped to the owner — returns `undefined` for other users' rows. */
-  findByIdAndUserId(id: string, userId: string): CategoryRow | undefined {
-    return this.db
+  async findByIdAndUserId(
+    id: string,
+    userId: string,
+  ): Promise<CategoryRow | undefined> {
+    return await this.db
       .select()
       .from(categories)
       .where(and(eq(categories.id, id), eq(categories.userId, userId)))
@@ -39,19 +48,24 @@ export class CategoriesRepository {
   }
 
   /** FR-003 (Spec 003): cheap existence check used by the transactions service. */
-  existsByIdAndUserId(id: string, userId: string): boolean {
+  async existsByIdAndUserId(id: string, userId: string): Promise<boolean> {
+    // Narrow cast to the async member: the `select(fields)` overload does not
+    // resolve on the union type; both drivers are awaited uniformly anyway.
     return (
-      this.db
+      (await (this.db as LibSQLDatabase)
         .select({ id: categories.id })
         .from(categories)
         .where(and(eq(categories.id, id), eq(categories.userId, userId)))
-        .get() !== undefined
+        .get()) !== undefined
     );
   }
 
   /** Case-insensitive duplicate pre-check (FR-002). Parameterized — no string concat. */
-  findByNameForUser(userId: string, name: string): CategoryRow | undefined {
-    return this.db
+  async findByNameForUser(
+    userId: string,
+    name: string,
+  ): Promise<CategoryRow | undefined> {
+    return await this.db
       .select()
       .from(categories)
       .where(
@@ -63,9 +77,9 @@ export class CategoriesRepository {
       .get();
   }
 
-  create(data: CreateCategoryData): CategoryRow {
+  async create(data: CreateCategoryData): Promise<CategoryRow> {
     const now = Date.now();
-    return this.db
+    return await this.db
       .insert(categories)
       .values({
         userId: data.userId,
@@ -79,12 +93,12 @@ export class CategoriesRepository {
       .get();
   }
 
-  update(
+  async update(
     id: string,
     userId: string,
     data: UpdateCategoryData,
-  ): CategoryRow | undefined {
-    return this.db
+  ): Promise<CategoryRow | undefined> {
+    return await this.db
       .update(categories)
       .set(data)
       .where(and(eq(categories.id, id), eq(categories.userId, userId)))
@@ -92,11 +106,11 @@ export class CategoriesRepository {
       .get();
   }
 
-  delete(id: string, userId: string): boolean {
-    const result = this.db
+  async delete(id: string, userId: string): Promise<boolean> {
+    const deleted = await this.db
       .delete(categories)
       .where(and(eq(categories.id, id), eq(categories.userId, userId)))
-      .run();
-    return result.changes > 0;
+      .returning();
+    return deleted.length > 0;
   }
 }

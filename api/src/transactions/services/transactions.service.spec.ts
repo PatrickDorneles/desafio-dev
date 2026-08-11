@@ -65,11 +65,11 @@ describe('TransactionsService', () => {
   });
 
   describe('create', () => {
-    it('creates a transaction and returns the row (FR-001)', () => {
-      categoriesRepository.existsByIdAndUserId.mockReturnValue(true);
-      transactionsRepository.create.mockReturnValue(transactionRow);
+    it('creates a transaction and returns the row (FR-001)', async () => {
+      categoriesRepository.existsByIdAndUserId.mockResolvedValue(true);
+      transactionsRepository.create.mockResolvedValue(transactionRow);
 
-      const result = service.create('uuid-user-1', {
+      const result = await service.create('uuid-user-1', {
         type: 'EXPENSE',
         amountCents: 5000,
         description: 'Almoço',
@@ -92,13 +92,13 @@ describe('TransactionsService', () => {
       expect(result).toEqual(transactionRow);
     });
 
-    it('creates without a category (absent → null)', () => {
-      transactionsRepository.create.mockReturnValue({
+    it('creates without a category (absent → null)', async () => {
+      transactionsRepository.create.mockResolvedValue({
         ...transactionRow,
         categoryId: null,
       });
 
-      const result = service.create('uuid-user-1', {
+      const result = await service.create('uuid-user-1', {
         type: 'INCOME',
         amountCents: 1000,
         description: 'x',
@@ -112,10 +112,10 @@ describe('TransactionsService', () => {
       expect(result.categoryId).toBeNull();
     });
 
-    it('throws BadRequestException (400) when the category is unknown or foreign (FR-003)', () => {
-      categoriesRepository.existsByIdAndUserId.mockReturnValue(false);
+    it('throws BadRequestException (400) when the category is unknown or foreign (FR-003)', async () => {
+      categoriesRepository.existsByIdAndUserId.mockResolvedValue(false);
 
-      expect(() =>
+      await expect(
         service.create('uuid-user-1', {
           type: 'EXPENSE',
           amountCents: 5000,
@@ -123,17 +123,22 @@ describe('TransactionsService', () => {
           date: '2026-08-10',
           categoryId: 'uuid-cat-999',
         }),
-      ).toThrow(BadRequestException);
+      ).rejects.toBeInstanceOf(BadRequestException);
       expect(transactionsRepository.create).not.toHaveBeenCalled();
     });
   });
 
   describe('findAll', () => {
-    it('defaults to page 1 / pageSize 10 → offset 0, limit 10 (ADR-0007)', () => {
-      transactionsRepository.countByUserId.mockReturnValue(25);
-      transactionsRepository.findAllByUserId.mockReturnValue([transactionRow]);
+    it('defaults to page 1 / pageSize 10 → offset 0, limit 10 (ADR-0007)', async () => {
+      transactionsRepository.countByUserId.mockResolvedValue(25);
+      transactionsRepository.findAllByUserId.mockResolvedValue([
+        transactionRow,
+      ]);
 
-      const result = service.findAll('uuid-user-1', { page: 1, pageSize: 10 });
+      const result = await service.findAll('uuid-user-1', {
+        page: 1,
+        pageSize: 10,
+      });
 
       expect(transactionsRepository.countByUserId).toHaveBeenCalledWith(
         'uuid-user-1',
@@ -153,11 +158,11 @@ describe('TransactionsService', () => {
       });
     });
 
-    it('delegates offset/limit for later pages (page 3 of 25 @ 10)', () => {
-      transactionsRepository.countByUserId.mockReturnValue(25);
-      transactionsRepository.findAllByUserId.mockReturnValue([]);
+    it('delegates offset/limit for later pages (page 3 of 25 @ 10)', async () => {
+      transactionsRepository.countByUserId.mockResolvedValue(25);
+      transactionsRepository.findAllByUserId.mockResolvedValue([]);
 
-      service.findAll('uuid-user-1', { page: 3, pageSize: 10 });
+      await service.findAll('uuid-user-1', { page: 3, pageSize: 10 });
 
       expect(transactionsRepository.findAllByUserId).toHaveBeenCalledWith(
         'uuid-user-1',
@@ -165,22 +170,28 @@ describe('TransactionsService', () => {
       );
     });
 
-    it('last page → hasNextPage false (page 3 of 25 @ 10)', () => {
-      transactionsRepository.countByUserId.mockReturnValue(25);
-      transactionsRepository.findAllByUserId.mockReturnValue([]);
+    it('last page → hasNextPage false (page 3 of 25 @ 10)', async () => {
+      transactionsRepository.countByUserId.mockResolvedValue(25);
+      transactionsRepository.findAllByUserId.mockResolvedValue([]);
 
-      const result = service.findAll('uuid-user-1', { page: 3, pageSize: 10 });
+      const result = await service.findAll('uuid-user-1', {
+        page: 3,
+        pageSize: 10,
+      });
 
       expect(result.meta.hasNextPage).toBe(false);
       expect(result.meta.hasPreviousPage).toBe(true);
       expect(result.meta.totalPages).toBe(3);
     });
 
-    it('out-of-range page → empty data with correct meta (never 404)', () => {
-      transactionsRepository.countByUserId.mockReturnValue(25);
-      transactionsRepository.findAllByUserId.mockReturnValue([]);
+    it('out-of-range page → empty data with correct meta (never 404)', async () => {
+      transactionsRepository.countByUserId.mockResolvedValue(25);
+      transactionsRepository.findAllByUserId.mockResolvedValue([]);
 
-      const result = service.findAll('uuid-user-1', { page: 99, pageSize: 10 });
+      const result = await service.findAll('uuid-user-1', {
+        page: 99,
+        pageSize: 10,
+      });
 
       expect(result.data).toEqual([]);
       expect(result.meta).toEqual({
@@ -193,11 +204,14 @@ describe('TransactionsService', () => {
       });
     });
 
-    it('empty store → totalPages 0, no navigation flags', () => {
-      transactionsRepository.countByUserId.mockReturnValue(0);
-      transactionsRepository.findAllByUserId.mockReturnValue([]);
+    it('empty store → totalPages 0, no navigation flags', async () => {
+      transactionsRepository.countByUserId.mockResolvedValue(0);
+      transactionsRepository.findAllByUserId.mockResolvedValue([]);
 
-      const result = service.findAll('uuid-user-1', { page: 1, pageSize: 10 });
+      const result = await service.findAll('uuid-user-1', {
+        page: 1,
+        pageSize: 10,
+      });
 
       expect(result.data).toEqual([]);
       expect(result.meta).toEqual({
@@ -212,33 +226,37 @@ describe('TransactionsService', () => {
   });
 
   describe('findOne', () => {
-    it('returns the transaction when owned (FR-005)', () => {
-      transactionsRepository.findByIdAndUserId.mockReturnValue(transactionRow);
-
-      expect(service.findOne('uuid-user-1', 'uuid-tx-1')).toEqual(
+    it('returns the transaction when owned (FR-005)', async () => {
+      transactionsRepository.findByIdAndUserId.mockResolvedValue(
         transactionRow,
       );
+
+      await expect(
+        service.findOne('uuid-user-1', 'uuid-tx-1'),
+      ).resolves.toEqual(transactionRow);
     });
 
-    it('throws NotFoundException (404) when missing or not owned (FR-005)', () => {
-      transactionsRepository.findByIdAndUserId.mockReturnValue(undefined);
+    it('throws NotFoundException (404) when missing or not owned (FR-005)', async () => {
+      transactionsRepository.findByIdAndUserId.mockResolvedValue(undefined);
 
-      expect(() => service.findOne('uuid-user-1', 'uuid-tx-1')).toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.findOne('uuid-user-1', 'uuid-tx-1'),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 
   describe('update', () => {
-    it('updates fields and returns the updated row (FR-006)', () => {
-      transactionsRepository.findByIdAndUserId.mockReturnValue(transactionRow);
-      transactionsRepository.update.mockReturnValue({
+    it('updates fields and returns the updated row (FR-006)', async () => {
+      transactionsRepository.findByIdAndUserId.mockResolvedValue(
+        transactionRow,
+      );
+      transactionsRepository.update.mockResolvedValue({
         ...transactionRow,
         amountCents: 5500,
         updatedAt: 1780000000100,
       });
 
-      const result = service.update('uuid-user-1', 'uuid-tx-1', {
+      const result = await service.update('uuid-user-1', 'uuid-tx-1', {
         amountCents: 5500,
       });
 
@@ -253,14 +271,16 @@ describe('TransactionsService', () => {
       expect(result.updatedAt).toBe(1780000000100);
     });
 
-    it('clears the category link when categoryId is null (CA-006)', () => {
-      transactionsRepository.findByIdAndUserId.mockReturnValue(transactionRow);
-      transactionsRepository.update.mockReturnValue({
+    it('clears the category link when categoryId is null (CA-006)', async () => {
+      transactionsRepository.findByIdAndUserId.mockResolvedValue(
+        transactionRow,
+      );
+      transactionsRepository.update.mockResolvedValue({
         ...transactionRow,
         categoryId: null,
       });
 
-      const result = service.update('uuid-user-1', 'uuid-tx-1', {
+      const result = await service.update('uuid-user-1', 'uuid-tx-1', {
         categoryId: null,
       });
 
@@ -270,67 +290,73 @@ describe('TransactionsService', () => {
       expect(result.categoryId).toBeNull();
     });
 
-    it('revalidates a new categoryId and throws 400 when invalid (FR-003/FR-006)', () => {
-      transactionsRepository.findByIdAndUserId.mockReturnValue(transactionRow);
-      categoriesRepository.existsByIdAndUserId.mockReturnValue(false);
+    it('revalidates a new categoryId and throws 400 when invalid (FR-003/FR-006)', async () => {
+      transactionsRepository.findByIdAndUserId.mockResolvedValue(
+        transactionRow,
+      );
+      categoriesRepository.existsByIdAndUserId.mockResolvedValue(false);
 
-      expect(() =>
+      await expect(
         service.update('uuid-user-1', 'uuid-tx-1', {
           categoryId: 'uuid-cat-999',
         }),
-      ).toThrow(BadRequestException);
+      ).rejects.toBeInstanceOf(BadRequestException);
       expect(transactionsRepository.update).not.toHaveBeenCalled();
     });
 
-    it('throws NotFoundException (404) when the transaction is missing', () => {
-      transactionsRepository.findByIdAndUserId.mockReturnValue(undefined);
+    it('throws NotFoundException (404) when the transaction is missing', async () => {
+      transactionsRepository.findByIdAndUserId.mockResolvedValue(undefined);
 
-      expect(() =>
+      await expect(
         service.update('uuid-user-1', 'uuid-tx-1', { amountCents: 5500 }),
-      ).toThrow(NotFoundException);
+      ).rejects.toBeInstanceOf(NotFoundException);
       expect(transactionsRepository.update).not.toHaveBeenCalled();
     });
   });
 
   describe('remove', () => {
-    it('deletes the transaction (FR-007)', () => {
-      transactionsRepository.findByIdAndUserId.mockReturnValue(transactionRow);
-      transactionsRepository.delete.mockReturnValue(true);
+    it('deletes the transaction (FR-007)', async () => {
+      transactionsRepository.findByIdAndUserId.mockResolvedValue(
+        transactionRow,
+      );
+      transactionsRepository.delete.mockResolvedValue(true);
 
-      expect(() => service.remove('uuid-user-1', 'uuid-tx-1')).not.toThrow();
+      await expect(
+        service.remove('uuid-user-1', 'uuid-tx-1'),
+      ).resolves.toBeUndefined();
       expect(transactionsRepository.delete).toHaveBeenCalledWith(
         'uuid-tx-1',
         'uuid-user-1',
       );
     });
 
-    it('throws NotFoundException (404) when missing or not owned', () => {
-      transactionsRepository.findByIdAndUserId.mockReturnValue(undefined);
+    it('throws NotFoundException (404) when missing or not owned', async () => {
+      transactionsRepository.findByIdAndUserId.mockResolvedValue(undefined);
 
-      expect(() => service.remove('uuid-user-1', 'uuid-tx-1')).toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.remove('uuid-user-1', 'uuid-tx-1'),
+      ).rejects.toBeInstanceOf(NotFoundException);
       expect(transactionsRepository.delete).not.toHaveBeenCalled();
     });
   });
 
   describe('getSummary', () => {
-    it('computes income − expense = balance (FR-008/SC-002)', () => {
+    it('computes income − expense = balance (FR-008/SC-002)', async () => {
       transactionsRepository.sumByType.mockImplementation((_userId, type) =>
-        type === 'INCOME' ? 10000 : 3000,
+        Promise.resolve(type === 'INCOME' ? 10000 : 3000),
       );
 
-      expect(service.getSummary('uuid-user-1')).toEqual({
+      await expect(service.getSummary('uuid-user-1')).resolves.toEqual({
         totalIncomeCents: 10000,
         totalExpenseCents: 3000,
         balanceCents: 7000,
       });
     });
 
-    it('returns zeros when there are no transactions (CA-008)', () => {
-      transactionsRepository.sumByType.mockReturnValue(0);
+    it('returns zeros when there are no transactions (CA-008)', async () => {
+      transactionsRepository.sumByType.mockResolvedValue(0);
 
-      expect(service.getSummary('uuid-user-1')).toEqual({
+      await expect(service.getSummary('uuid-user-1')).resolves.toEqual({
         totalIncomeCents: 0,
         totalExpenseCents: 0,
         balanceCents: 0,

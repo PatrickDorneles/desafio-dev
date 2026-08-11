@@ -47,7 +47,7 @@ export class CategoriesController {
   create(
     @Body() dto: CreateCategoryDto,
     @CurrentUser() user: CurrentUserPayload,
-  ): CategoryRow {
+  ): Promise<CategoryRow> {
     return this.categoriesService.create(user.id, dto);
   }
 
@@ -59,7 +59,7 @@ export class CategoriesController {
     type: [CategoryResponseDto],
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  findAll(@CurrentUser() user: CurrentUserPayload): CategoryRow[] {
+  findAll(@CurrentUser() user: CurrentUserPayload): Promise<CategoryRow[]> {
     return this.categoriesService.findAll(user.id);
   }
 
@@ -76,7 +76,7 @@ export class CategoriesController {
   findOne(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: CurrentUserPayload,
-  ): CategoryRow {
+  ): Promise<CategoryRow> {
     return this.categoriesService.findOne(user.id, id);
   }
 
@@ -95,7 +95,7 @@ export class CategoriesController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateCategoryDto,
     @CurrentUser() user: CurrentUserPayload,
-  ): CategoryRow {
+  ): Promise<CategoryRow> {
     return this.categoriesService.update(user.id, id, dto);
   }
 
@@ -109,7 +109,7 @@ export class CategoriesController {
   remove(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: CurrentUserPayload,
-  ): void {
-    this.categoriesService.remove(user.id, id);
+  ): Promise<void> {
+    return this.categoriesService.remove(user.id, id);
   }
 }

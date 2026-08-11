@@ -50,7 +50,7 @@ describe('JwtAuthGuard', () => {
 
   it('passes a valid token and sets request.user to the DB user (id/name/email)', async () => {
     reflector.getAllAndOverride.mockReturnValue(false);
-    usersRepository.findById.mockReturnValue({
+    usersRepository.findById.mockResolvedValue({
       id: 'uuid-1',
       name: 'Alice',
       email: 'alice@example.com',
@@ -72,7 +72,7 @@ describe('JwtAuthGuard', () => {
 
   it('throws 401 when the token has no backing user (stale/deleted)', async () => {
     reflector.getAllAndOverride.mockReturnValue(false);
-    usersRepository.findById.mockReturnValue(undefined);
+    usersRepository.findById.mockResolvedValue(undefined);
     const token = await realJwt.signAsync({ sub: 'uuid-1' });
     const context = mockContext({ authorization: `Bearer ${token}` });
 

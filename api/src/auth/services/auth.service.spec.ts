@@ -64,7 +64,7 @@ describe('AuthService', () => {
       const hashSpy = jest
         .spyOn(bcrypt, 'hash')
         .mockResolvedValue('hashed-password' as never);
-      usersRepository.create.mockReturnValue(userRow);
+      usersRepository.create.mockResolvedValue(userRow);
 
       const result = await service.register({
         name: 'Maria Silva',
@@ -95,7 +95,7 @@ describe('AuthService', () => {
     });
 
     it('pre-checks findByEmail and skips hashing on duplicates (FR-011)', async () => {
-      usersRepository.findByEmail.mockReturnValue(userRow);
+      usersRepository.findByEmail.mockResolvedValue(userRow);
       const hashSpy = jest.spyOn(bcrypt, 'hash');
 
       await expect(
@@ -114,9 +114,7 @@ describe('AuthService', () => {
       jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashed-password' as never);
       const error = new Error('UNIQUE constraint failed: users.email');
       (error as { code?: string }).code = 'SQLITE_CONSTRAINT_UNIQUE';
-      usersRepository.create.mockImplementation(() => {
-        throw error;
-      });
+      usersRepository.create.mockRejectedValue(error);
 
       await expect(
         service.register({
@@ -130,9 +128,7 @@ describe('AuthService', () => {
     it('re-throws non-unique errors', async () => {
       jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashed-password' as never);
       const error = new Error('disk I/O error');
-      usersRepository.create.mockImplementation(() => {
-        throw error;
-      });
+      usersRepository.create.mockRejectedValue(error);
 
       await expect(
         service.register({
@@ -146,7 +142,7 @@ describe('AuthService', () => {
 
   describe('login', () => {
     it('returns accessToken and profile on valid credentials', async () => {
-      usersRepository.findByEmail.mockReturnValue(userRow);
+      usersRepository.findByEmail.mockResolvedValue(userRow);
       jest.spyOn(bcrypt, 'compare').mockResolvedValue(true as never);
 
       const result = await service.login({
@@ -168,14 +164,14 @@ describe('AuthService', () => {
 
     it('throws 401 with the SAME message for wrong password and unknown email', async () => {
       // wrong password
-      usersRepository.findByEmail.mockReturnValue(userRow);
+      usersRepository.findByEmail.mockResolvedValue(userRow);
       jest.spyOn(bcrypt, 'compare').mockResolvedValue(false as never);
       const wrongPasswordError = await service
         .login({ email: 'maria@example.com', password: 'senha-errada' })
         .catch((e: unknown) => e);
 
       // unknown email
-      usersRepository.findByEmail.mockReturnValue(undefined);
+      usersRepository.findByEmail.mockResolvedValue(undefined);
       const unknownEmailError = await service
         .login({ email: 'nobody@example.com', password: 'qualquer-coisa' })
         .catch((e: unknown) => e);
@@ -188,7 +184,7 @@ describe('AuthService', () => {
     });
 
     it('runs bcrypt.compare against DUMMY_HASH for unknown emails (timing, CA-004)', async () => {
-      usersRepository.findByEmail.mockReturnValue(undefined);
+      usersRepository.findByEmail.mockResolvedValue(undefined);
       const compareSpy = jest
         .spyOn(bcrypt, 'compare')
         .mockResolvedValue(false as never);
@@ -205,10 +201,10 @@ describe('AuthService', () => {
   });
 
   describe('getProfile', () => {
-    it('returns the profile for an existing user', () => {
-      usersRepository.findById.mockReturnValue(userRow);
+    it('returns the profile for an existing user', async () => {
+      usersRepository.findById.mockResolvedValue(userRow);
 
-      const result = service.getProfile('uuid-1');
+      const result = await service.getProfile('uuid-1');
 
       expect(result).toEqual({
         id: 'uuid-1',
@@ -219,10 +215,12 @@ describe('AuthService', () => {
       expect(result).not.toHaveProperty('passwordHash');
     });
 
-    it('throws NotFoundException when the user is gone', () => {
-      usersRepository.findById.mockReturnValue(undefined);
+    it('throws NotFoundException when the user is gone', async () => {
+      usersRepository.findById.mockResolvedValue(undefined);
 
-      expect(() => service.getProfile('missing')).toThrow(NotFoundException);
+      await expect(service.getProfile('missing')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
   });
 });

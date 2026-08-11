@@ -10,16 +10,16 @@ import { CategoryRow, UpdateCategoryData } from '../types/category.types';
 
 /**
  * Domain logic for categories (ADR-0003). All methods scope by `userId` from
- * the token (SC-001). better-sqlite3 is synchronous, so these methods are
- * intentionally NOT async.
+ * the token (SC-001). Repos are async (dual-driver: better-sqlite3 sync /
+ * libsql async), so every repository call is awaited.
  */
 @Injectable()
 export class CategoriesService {
   constructor(private readonly categoriesRepository: CategoriesRepository) {}
 
   /** FR-001/FR-002/FR-013: pre-check + DB constraint race → 409. */
-  create(userId: string, dto: CreateCategoryDto): CategoryRow {
-    const existing = this.categoriesRepository.findByNameForUser(
+  async create(userId: string, dto: CreateCategoryDto): Promise<CategoryRow> {
+    const existing = await this.categoriesRepository.findByNameForUser(
       userId,
       dto.name,
     );
@@ -28,7 +28,7 @@ export class CategoriesService {
     }
 
     try {
-      return this.categoriesRepository.create({
+      return await this.categoriesRepository.create({
         userId,
         name: dto.name,
         color: dto.color,
@@ -43,13 +43,16 @@ export class CategoriesService {
   }
 
   /** FR-003/FR-014: pass-through of the owner-scoped, ordered list. */
-  findAll(userId: string): CategoryRow[] {
-    return this.categoriesRepository.findAllByUserId(userId);
+  async findAll(userId: string): Promise<CategoryRow[]> {
+    return await this.categoriesRepository.findAllByUserId(userId);
   }
 
   /** FR-004/CA-004: 404 for missing OR other-user rows — no distinction. */
-  findOne(userId: string, id: string): CategoryRow {
-    const category = this.categoriesRepository.findByIdAndUserId(id, userId);
+  async findOne(userId: string, id: string): Promise<CategoryRow> {
+    const category = await this.categoriesRepository.findByIdAndUserId(
+      id,
+      userId,
+    );
     if (!category) {
       throw new NotFoundException('Category not found');
     }
@@ -57,8 +60,15 @@ export class CategoriesService {
   }
 
   /** FR-005/FR-002: ownership first, then case-insensitive duplicate check excluding self. */
-  update(userId: string, id: string, dto: UpdateCategoryDto): CategoryRow {
-    const existing = this.categoriesRepository.findByIdAndUserId(id, userId);
+  async update(
+    userId: string,
+    id: string,
+    dto: UpdateCategoryDto,
+  ): Promise<CategoryRow> {
+    const existing = await this.categoriesRepository.findByIdAndUserId(
+      id,
+      userId,
+    );
     if (!existing) {
       throw new NotFoundException('Category not found');
     }
@@ -67,7 +77,7 @@ export class CategoriesService {
       dto.name !== undefined &&
       dto.name.toLowerCase() !== existing.name.toLowerCase()
     ) {
-      const duplicate = this.categoriesRepository.findByNameForUser(
+      const duplicate = await this.categoriesRepository.findByNameForUser(
         userId,
         dto.name,
       );
@@ -88,7 +98,11 @@ export class CategoriesService {
     }
 
     try {
-      const updated = this.categoriesRepository.update(id, userId, updateData);
+      const updated = await this.categoriesRepository.update(
+        id,
+        userId,
+        updateData,
+      );
       if (!updated) {
         // Category deleted between the ownership check and the update (race).
         throw new NotFoundException('Category not found');
@@ -103,12 +117,15 @@ export class CategoriesService {
   }
 
   /** FR-006: ownership first, then delete. SET NULL of transactions is Fase 3. */
-  remove(userId: string, id: string): void {
-    const existing = this.categoriesRepository.findByIdAndUserId(id, userId);
+  async remove(userId: string, id: string): Promise<void> {
+    const existing = await this.categoriesRepository.findByIdAndUserId(
+      id,
+      userId,
+    );
     if (!existing) {
       throw new NotFoundException('Category not found');
     }
-    this.categoriesRepository.delete(id, userId);
+    await this.categoriesRepository.delete(id, userId);
   }
 
   private isUniqueConstraintError(error: unknown): boolean {

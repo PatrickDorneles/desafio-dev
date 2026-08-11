@@ -53,11 +53,11 @@ describe('CategoriesService', () => {
   });
 
   describe('create', () => {
-    it('creates a category and returns the row', () => {
-      repository.findByNameForUser.mockReturnValue(undefined);
-      repository.create.mockReturnValue(categoryRow);
+    it('creates a category and returns the row', async () => {
+      repository.findByNameForUser.mockResolvedValue(undefined);
+      repository.create.mockResolvedValue(categoryRow);
 
-      const result = service.create('uuid-user-1', {
+      const result = await service.create('uuid-user-1', {
         name: 'Alimentação',
         color: '#FF5733',
         icon: 'utensils',
@@ -76,48 +76,44 @@ describe('CategoriesService', () => {
       expect(result).toEqual(categoryRow);
     });
 
-    it('throws ConflictException (409) when the name already exists (pre-check, FR-002)', () => {
-      repository.findByNameForUser.mockReturnValue(categoryRow);
+    it('throws ConflictException (409) when the name already exists (pre-check, FR-002)', async () => {
+      repository.findByNameForUser.mockResolvedValue(categoryRow);
 
-      expect(() =>
+      await expect(
         service.create('uuid-user-1', { name: 'Alimentação' }),
-      ).toThrow(ConflictException);
+      ).rejects.toBeInstanceOf(ConflictException);
       expect(repository.create).not.toHaveBeenCalled();
     });
 
-    it('throws ConflictException (409) on SQLITE_CONSTRAINT_UNIQUE (race, FR-013)', () => {
-      repository.findByNameForUser.mockReturnValue(undefined);
+    it('throws ConflictException (409) on SQLITE_CONSTRAINT_UNIQUE (race, FR-013)', async () => {
+      repository.findByNameForUser.mockResolvedValue(undefined);
       const error = new Error(
         'UNIQUE constraint failed: categories.user_id, categories.name',
       );
       (error as { code?: string }).code = 'SQLITE_CONSTRAINT_UNIQUE';
-      repository.create.mockImplementation(() => {
-        throw error;
-      });
+      repository.create.mockRejectedValue(error);
 
-      expect(() =>
+      await expect(
         service.create('uuid-user-1', { name: 'Alimentação' }),
-      ).toThrow(ConflictException);
+      ).rejects.toBeInstanceOf(ConflictException);
     });
 
-    it('re-throws non-unique errors', () => {
-      repository.findByNameForUser.mockReturnValue(undefined);
+    it('re-throws non-unique errors', async () => {
+      repository.findByNameForUser.mockResolvedValue(undefined);
       const error = new Error('disk I/O error');
-      repository.create.mockImplementation(() => {
-        throw error;
-      });
+      repository.create.mockRejectedValue(error);
 
-      expect(() =>
+      await expect(
         service.create('uuid-user-1', { name: 'Alimentação' }),
-      ).toThrow(error);
+      ).rejects.toBe(error);
     });
   });
 
   describe('findAll', () => {
-    it('passes through the repository list (FR-003)', () => {
-      repository.findAllByUserId.mockReturnValue([categoryRow]);
+    it('passes through the repository list (FR-003)', async () => {
+      repository.findAllByUserId.mockResolvedValue([categoryRow]);
 
-      const result = service.findAll('uuid-user-1');
+      const result = await service.findAll('uuid-user-1');
 
       expect(repository.findAllByUserId).toHaveBeenCalledWith('uuid-user-1');
       expect(result).toEqual([categoryRow]);
@@ -125,31 +121,33 @@ describe('CategoriesService', () => {
   });
 
   describe('findOne', () => {
-    it('returns the category when owned', () => {
-      repository.findByIdAndUserId.mockReturnValue(categoryRow);
+    it('returns the category when owned', async () => {
+      repository.findByIdAndUserId.mockResolvedValue(categoryRow);
 
-      expect(service.findOne('uuid-user-1', 'uuid-cat-1')).toEqual(categoryRow);
+      await expect(
+        service.findOne('uuid-user-1', 'uuid-cat-1'),
+      ).resolves.toEqual(categoryRow);
     });
 
-    it('throws NotFoundException (404) when missing or not owned (FR-004)', () => {
-      repository.findByIdAndUserId.mockReturnValue(undefined);
+    it('throws NotFoundException (404) when missing or not owned (FR-004)', async () => {
+      repository.findByIdAndUserId.mockResolvedValue(undefined);
 
-      expect(() => service.findOne('uuid-user-1', 'uuid-cat-1')).toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.findOne('uuid-user-1', 'uuid-cat-1'),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 
   describe('update', () => {
-    it('updates fields and returns the updated row (FR-005)', () => {
-      repository.findByIdAndUserId.mockReturnValue(categoryRow);
-      repository.update.mockReturnValue({
+    it('updates fields and returns the updated row (FR-005)', async () => {
+      repository.findByIdAndUserId.mockResolvedValue(categoryRow);
+      repository.update.mockResolvedValue({
         ...categoryRow,
         name: 'Mercado',
         updatedAt: 1780000000100,
       });
 
-      const result = service.update('uuid-user-1', 'uuid-cat-1', {
+      const result = await service.update('uuid-user-1', 'uuid-cat-1', {
         name: 'Mercado',
       });
 
@@ -164,31 +162,31 @@ describe('CategoriesService', () => {
       expect(result.updatedAt).toBe(1780000000100);
     });
 
-    it('throws NotFoundException (404) when the category is missing', () => {
-      repository.findByIdAndUserId.mockReturnValue(undefined);
+    it('throws NotFoundException (404) when the category is missing', async () => {
+      repository.findByIdAndUserId.mockResolvedValue(undefined);
 
-      expect(() =>
+      await expect(
         service.update('uuid-user-1', 'uuid-cat-1', { name: 'Mercado' }),
-      ).toThrow(NotFoundException);
+      ).rejects.toBeInstanceOf(NotFoundException);
       expect(repository.update).not.toHaveBeenCalled();
     });
 
-    it('throws ConflictException (409) when renaming to an existing name (excluding self)', () => {
-      repository.findByIdAndUserId.mockReturnValue(categoryRow);
+    it('throws ConflictException (409) when renaming to an existing name (excluding self)', async () => {
+      repository.findByIdAndUserId.mockResolvedValue(categoryRow);
       const other = { ...categoryRow, id: 'uuid-cat-2', name: 'Mercado' };
-      repository.findByNameForUser.mockReturnValue(other);
+      repository.findByNameForUser.mockResolvedValue(other);
 
-      expect(() =>
+      await expect(
         service.update('uuid-user-1', 'uuid-cat-1', { name: 'Mercado' }),
-      ).toThrow(ConflictException);
+      ).rejects.toBeInstanceOf(ConflictException);
       expect(repository.update).not.toHaveBeenCalled();
     });
 
-    it('allows renaming to the SAME name (case-insensitive, self)', () => {
-      repository.findByIdAndUserId.mockReturnValue(categoryRow);
-      repository.update.mockReturnValue(categoryRow);
+    it('allows renaming to the SAME name (case-insensitive, self)', async () => {
+      repository.findByIdAndUserId.mockResolvedValue(categoryRow);
+      repository.update.mockResolvedValue(categoryRow);
 
-      const result = service.update('uuid-user-1', 'uuid-cat-1', {
+      const result = await service.update('uuid-user-1', 'uuid-cat-1', {
         name: 'alimentação',
       });
 
@@ -196,39 +194,39 @@ describe('CategoriesService', () => {
       expect(result).toEqual(categoryRow);
     });
 
-    it('throws ConflictException (409) on SQLITE_CONSTRAINT_UNIQUE (race)', () => {
-      repository.findByIdAndUserId.mockReturnValue(categoryRow);
-      repository.findByNameForUser.mockReturnValue(undefined);
+    it('throws ConflictException (409) on SQLITE_CONSTRAINT_UNIQUE (race)', async () => {
+      repository.findByIdAndUserId.mockResolvedValue(categoryRow);
+      repository.findByNameForUser.mockResolvedValue(undefined);
       const error = new Error('UNIQUE constraint failed');
       (error as { code?: string }).code = 'SQLITE_CONSTRAINT_UNIQUE';
-      repository.update.mockImplementation(() => {
-        throw error;
-      });
+      repository.update.mockRejectedValue(error);
 
-      expect(() =>
+      await expect(
         service.update('uuid-user-1', 'uuid-cat-1', { name: 'Mercado' }),
-      ).toThrow(ConflictException);
+      ).rejects.toBeInstanceOf(ConflictException);
     });
   });
 
   describe('remove', () => {
-    it('deletes the category (FR-006)', () => {
-      repository.findByIdAndUserId.mockReturnValue(categoryRow);
-      repository.delete.mockReturnValue(true);
+    it('deletes the category (FR-006)', async () => {
+      repository.findByIdAndUserId.mockResolvedValue(categoryRow);
+      repository.delete.mockResolvedValue(true);
 
-      expect(() => service.remove('uuid-user-1', 'uuid-cat-1')).not.toThrow();
+      await expect(
+        service.remove('uuid-user-1', 'uuid-cat-1'),
+      ).resolves.toBeUndefined();
       expect(repository.delete).toHaveBeenCalledWith(
         'uuid-cat-1',
         'uuid-user-1',
       );
     });
 
-    it('throws NotFoundException (404) when missing or not owned', () => {
-      repository.findByIdAndUserId.mockReturnValue(undefined);
+    it('throws NotFoundException (404) when missing or not owned', async () => {
+      repository.findByIdAndUserId.mockResolvedValue(undefined);
 
-      expect(() => service.remove('uuid-user-1', 'uuid-cat-1')).toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.remove('uuid-user-1', 'uuid-cat-1'),
+      ).rejects.toBeInstanceOf(NotFoundException);
       expect(repository.delete).not.toHaveBeenCalled();
     });
   });

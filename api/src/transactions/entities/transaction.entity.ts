@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { users } from '../../users/entities/users.entity';
 import { categories } from '../../categories/entities/category.entity';
+import { TransactionType } from '../types/transaction.types';
 
 /**
  * `transactions` table — Spec 003, §8.
@@ -25,7 +26,9 @@ export const transactions = sqliteTable(
     categoryId: text('category_id').references(() => categories.id, {
       onDelete: 'set null',
     }),
-    type: text('type').notNull(),
+    type: text('type', {
+      enum: [TransactionType.INCOME, TransactionType.EXPENSE],
+    }).notNull(),
     amountCents: integer('amount_cents').notNull(),
     description: text('description').notNull(),
     date: text('date').notNull(),

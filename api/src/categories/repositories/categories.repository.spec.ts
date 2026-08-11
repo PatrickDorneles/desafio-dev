@@ -59,10 +59,10 @@ describe('CategoriesRepository', () => {
   }
 
   describe('create', () => {
-    it('inserts a row with timestamps and returns the full row', () => {
+    it('inserts a row with timestamps and returns the full row', async () => {
       const userId = createUser();
 
-      const row = repository.create({
+      const row = await repository.create({
         userId,
         name: 'Alimentação',
         color: '#FF5733',
@@ -78,10 +78,10 @@ describe('CategoriesRepository', () => {
       expect(typeof row.updatedAt).toBe('number');
     });
 
-    it('stores null for omitted color/icon', () => {
+    it('stores null for omitted color/icon', async () => {
       const userId = createUser();
 
-      const row = repository.create({ userId, name: 'Mercado' });
+      const row = await repository.create({ userId, name: 'Mercado' });
 
       expect(row.color).toBeNull();
       expect(row.icon).toBeNull();
@@ -89,15 +89,15 @@ describe('CategoriesRepository', () => {
   });
 
   describe('findAllByUserId', () => {
-    it("returns only the user's own categories ordered by name case-insensitively", () => {
+    it("returns only the user's own categories ordered by name case-insensitively", async () => {
       const userA = createUser('Alice', 'alice@example.com');
       const userB = createUser('Bob', 'bob@example.com');
-      repository.create({ userId: userA, name: 'Zebra' });
-      repository.create({ userId: userA, name: 'alimentação' });
-      repository.create({ userId: userA, name: 'Mercado' });
-      repository.create({ userId: userB, name: 'Outro' });
+      await repository.create({ userId: userA, name: 'Zebra' });
+      await repository.create({ userId: userA, name: 'alimentação' });
+      await repository.create({ userId: userA, name: 'Mercado' });
+      await repository.create({ userId: userB, name: 'Outro' });
 
-      const rows = repository.findAllByUserId(userA);
+      const rows = await repository.findAllByUserId(userA);
 
       expect(rows.map((r) => r.name)).toEqual([
         'alimentação',
@@ -106,67 +106,72 @@ describe('CategoriesRepository', () => {
       ]);
     });
 
-    it('returns an empty array when the user has no categories', () => {
+    it('returns an empty array when the user has no categories', async () => {
       const userId = createUser();
-      expect(repository.findAllByUserId(userId)).toEqual([]);
+      expect(await repository.findAllByUserId(userId)).toEqual([]);
     });
   });
 
   describe('findByIdAndUserId', () => {
-    it('finds a category owned by the user', () => {
+    it('finds a category owned by the user', async () => {
       const userId = createUser();
-      const created = repository.create({ userId, name: 'Alimentação' });
+      const created = await repository.create({ userId, name: 'Alimentação' });
 
-      const found = repository.findByIdAndUserId(created.id, userId);
+      const found = await repository.findByIdAndUserId(created.id, userId);
 
       expect(found?.id).toBe(created.id);
       expect(found?.name).toBe('Alimentação');
     });
 
-    it("returns undefined for another user's category", () => {
+    it("returns undefined for another user's category", async () => {
       const userA = createUser('Alice', 'alice@example.com');
       const userB = createUser('Bob', 'bob@example.com');
-      const created = repository.create({ userId: userA, name: 'Alimentação' });
+      const created = await repository.create({
+        userId: userA,
+        name: 'Alimentação',
+      });
 
-      const found = repository.findByIdAndUserId(created.id, userB);
+      const found = await repository.findByIdAndUserId(created.id, userB);
 
       expect(found).toBeUndefined();
     });
 
-    it('returns undefined for an unknown id', () => {
+    it('returns undefined for an unknown id', async () => {
       const userId = createUser();
       expect(
-        repository.findByIdAndUserId('does-not-exist', userId),
+        await repository.findByIdAndUserId('does-not-exist', userId),
       ).toBeUndefined();
     });
   });
 
   describe('findByNameForUser', () => {
-    it('matches case-insensitively', () => {
+    it('matches case-insensitively', async () => {
       const userId = createUser();
-      repository.create({ userId, name: 'Alimentação' });
+      await repository.create({ userId, name: 'Alimentação' });
 
-      const found = repository.findByNameForUser(userId, 'alimentação');
+      const found = await repository.findByNameForUser(userId, 'alimentação');
 
       expect(found?.name).toBe('Alimentação');
     });
 
-    it('returns undefined when there is no match', () => {
+    it('returns undefined when there is no match', async () => {
       const userId = createUser();
-      expect(repository.findByNameForUser(userId, 'nope')).toBeUndefined();
+      expect(
+        await repository.findByNameForUser(userId, 'nope'),
+      ).toBeUndefined();
     });
   });
 
   describe('update', () => {
-    it('updates fields and returns the updated row', () => {
+    it('updates fields and returns the updated row', async () => {
       const userId = createUser();
-      const created = repository.create({
+      const created = await repository.create({
         userId,
         name: 'Alimentação',
         color: '#FF5733',
       });
 
-      const updated = repository.update(created.id, userId, {
+      const updated = await repository.update(created.id, userId, {
         name: 'Mercado',
         updatedAt: 1780000000100,
       });
@@ -177,12 +182,15 @@ describe('CategoriesRepository', () => {
       expect(updated?.updatedAt).toBe(1780000000100);
     });
 
-    it('returns undefined when the category is not owned by the user', () => {
+    it('returns undefined when the category is not owned by the user', async () => {
       const userA = createUser('Alice', 'alice@example.com');
       const userB = createUser('Bob', 'bob@example.com');
-      const created = repository.create({ userId: userA, name: 'Alimentação' });
+      const created = await repository.create({
+        userId: userA,
+        name: 'Alimentação',
+      });
 
-      const updated = repository.update(created.id, userB, {
+      const updated = await repository.update(created.id, userB, {
         name: 'X',
         updatedAt: Date.now(),
       });
@@ -192,33 +200,40 @@ describe('CategoriesRepository', () => {
   });
 
   describe('delete', () => {
-    it('deletes the row and returns true', () => {
+    it('deletes the row and returns true', async () => {
       const userId = createUser();
-      const created = repository.create({ userId, name: 'Alimentação' });
+      const created = await repository.create({ userId, name: 'Alimentação' });
 
-      expect(repository.delete(created.id, userId)).toBe(true);
-      expect(repository.findByIdAndUserId(created.id, userId)).toBeUndefined();
+      expect(await repository.delete(created.id, userId)).toBe(true);
+      expect(
+        await repository.findByIdAndUserId(created.id, userId),
+      ).toBeUndefined();
     });
 
-    it('returns false when the category is not owned by the user', () => {
+    it('returns false when the category is not owned by the user', async () => {
       const userA = createUser('Alice', 'alice@example.com');
       const userB = createUser('Bob', 'bob@example.com');
-      const created = repository.create({ userId: userA, name: 'Alimentação' });
+      const created = await repository.create({
+        userId: userA,
+        name: 'Alimentação',
+      });
 
-      expect(repository.delete(created.id, userB)).toBe(false);
-      expect(repository.findByIdAndUserId(created.id, userA)).toBeDefined();
+      expect(await repository.delete(created.id, userB)).toBe(false);
+      expect(
+        await repository.findByIdAndUserId(created.id, userA),
+      ).toBeDefined();
     });
   });
 
   describe('cascade user → categories (FR-008)', () => {
-    it("removes the user's categories when the user row is deleted", () => {
+    it("removes the user's categories when the user row is deleted", async () => {
       const userId = createUser();
-      repository.create({ userId, name: 'Alimentação' });
-      repository.create({ userId, name: 'Mercado' });
+      await repository.create({ userId, name: 'Alimentação' });
+      await repository.create({ userId, name: 'Mercado' });
 
       db.delete(users).where(eq(users.id, userId)).run();
 
-      expect(repository.findAllByUserId(userId)).toEqual([]);
+      expect(await repository.findAllByUserId(userId)).toEqual([]);
     });
   });
 });

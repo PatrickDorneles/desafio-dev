@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, count, desc, eq, sum } from 'drizzle-orm';
 import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
+import { LibSQLDatabase } from 'drizzle-orm/libsql';
 import { DRIZZLE } from '../../common/constants/database.constants';
 import { transactions } from '../entities/transaction.entity';
 import {
@@ -12,24 +13,29 @@ import {
 
 /**
  * Only layer that touches Drizzle for the `transactions` table (ADR-0003).
- * better-sqlite3 is synchronous, so these methods are intentionally NOT async;
- * `findFirst`/`.get()` return `undefined` when absent — handled explicitly.
+ * Dual-driver: better-sqlite3 is synchronous, libsql (Turso) is async — so
+ * every method is async and awaits Drizzle calls uniformly (awaiting a sync
+ * better-sqlite3 result is a no-op at runtime). `findFirst`/`.get()` return
+ * `undefined` when absent — handled explicitly.
  * Every query filters by `userId` (SC-001) — never by request data.
  */
 @Injectable()
 export class TransactionsRepository {
-  constructor(@Inject(DRIZZLE) private readonly db: BetterSQLite3Database) {}
+  constructor(
+    @Inject(DRIZZLE)
+    private readonly db: BetterSQLite3Database | LibSQLDatabase,
+  ) {}
 
   /**
    * FR-004/FR-018/ADR-0007: own transactions only, stable order
    * `date DESC, createdAt DESC, id DESC` (id is the final tiebreaker so a row
    * never appears twice or vanishes between pages), sliced by limit/offset.
    */
-  findAllByUserId(
+  async findAllByUserId(
     userId: string,
     options: { limit: number; offset: number },
-  ): TransactionRow[] {
-    return this.db
+  ): Promise<TransactionRow[]> {
+    return await this.db
       .select()
       .from(transactions)
       .where(eq(transactions.userId, userId))
@@ -43,29 +49,36 @@ export class TransactionsRepository {
       .all();
   }
 
-  /** ADR-0007: total own transactions (sync — not db.$count, which is async). */
-  countByUserId(userId: string): number {
+  /** ADR-0007: total own transactions. */
+  async countByUserId(userId: string): Promise<number> {
+    // Narrow cast to the async member: the `select(fields)` overload does not
+    // resolve on the union type; both drivers are awaited uniformly anyway.
     return (
-      this.db
-        .select({ count: count() })
-        .from(transactions)
-        .where(eq(transactions.userId, userId))
-        .get()?.count ?? 0
+      (
+        await (this.db as LibSQLDatabase)
+          .select({ count: count() })
+          .from(transactions)
+          .where(eq(transactions.userId, userId))
+          .get()
+      )?.count ?? 0
     );
   }
 
   /** FR-005: scoped to the owner — returns `undefined` for other users' rows. */
-  findByIdAndUserId(id: string, userId: string): TransactionRow | undefined {
-    return this.db
+  async findByIdAndUserId(
+    id: string,
+    userId: string,
+  ): Promise<TransactionRow | undefined> {
+    return await this.db
       .select()
       .from(transactions)
       .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
       .get();
   }
 
-  create(data: CreateTransactionData): TransactionRow {
+  async create(data: CreateTransactionData): Promise<TransactionRow> {
     const now = Date.now();
-    return this.db
+    return await this.db
       .insert(transactions)
       .values({
         userId: data.userId,
@@ -81,12 +94,12 @@ export class TransactionsRepository {
       .get();
   }
 
-  update(
+  async update(
     id: string,
     userId: string,
     data: UpdateTransactionData,
-  ): TransactionRow | undefined {
-    return this.db
+  ): Promise<TransactionRow | undefined> {
+    return await this.db
       .update(transactions)
       .set(data)
       .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
@@ -94,17 +107,19 @@ export class TransactionsRepository {
       .get();
   }
 
-  delete(id: string, userId: string): boolean {
-    const result = this.db
+  async delete(id: string, userId: string): Promise<boolean> {
+    const deleted = await this.db
       .delete(transactions)
       .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
-      .run();
-    return result.changes > 0;
+      .returning();
+    return deleted.length > 0;
   }
 
   /** FR-008: total cents for one type, scoped to the owner. Empty → 0. */
-  sumByType(userId: string, type: TransactionType): number {
-    const result = this.db
+  async sumByType(userId: string, type: TransactionType): Promise<number> {
+    // Narrow cast to the async member: the `select(fields)` overload does not
+    // resolve on the union type; both drivers are awaited uniformly anyway.
+    const result = await (this.db as LibSQLDatabase)
       .select({ total: sum(transactions.amountCents) })
       .from(transactions)
       .where(and(eq(transactions.userId, userId), eq(transactions.type, type)))

@@ -35,8 +35,8 @@ describe('UsersRepository', () => {
   });
 
   describe('create', () => {
-    it('inserts a row with timestamps and returns the full row', () => {
-      const row = repository.create({
+    it('inserts a row with timestamps and returns the full row', async () => {
+      const row = await repository.create({
         name: 'Maria Silva',
         email: 'maria@example.com',
         passwordHash: 'hash-do-bcrypt',
@@ -52,43 +52,43 @@ describe('UsersRepository', () => {
   });
 
   describe('findByEmail', () => {
-    it('finds an existing user (exact normalized email)', () => {
-      const created = repository.create({
+    it('finds an existing user (exact normalized email)', async () => {
+      const created = await repository.create({
         name: 'Maria Silva',
         email: 'maria@example.com',
         passwordHash: 'hash',
       });
 
-      const found = repository.findByEmail('maria@example.com');
+      const found = await repository.findByEmail('maria@example.com');
 
       expect(found).toBeDefined();
       expect(found?.id).toBe(created.id);
       expect(found?.email).toBe('maria@example.com');
     });
 
-    it('returns undefined for an unknown email', () => {
-      const found = repository.findByEmail('nobody@example.com');
+    it('returns undefined for an unknown email', async () => {
+      const found = await repository.findByEmail('nobody@example.com');
       expect(found).toBeUndefined();
     });
   });
 
   describe('findById', () => {
-    it('finds a user by id', () => {
-      const created = repository.create({
+    it('finds a user by id', async () => {
+      const created = await repository.create({
         name: 'João Souza',
         email: 'joao@example.com',
         passwordHash: 'hash',
       });
 
-      const found = repository.findById(created.id);
+      const found = await repository.findById(created.id);
 
       expect(found).toBeDefined();
       expect(found?.id).toBe(created.id);
       expect(found?.name).toBe('João Souza');
     });
 
-    it('returns undefined for an unknown id', () => {
-      const found = repository.findById('does-not-exist');
+    it('returns undefined for an unknown id', async () => {
+      const found = await repository.findById('does-not-exist');
       expect(found).toBeUndefined();
     });
   });

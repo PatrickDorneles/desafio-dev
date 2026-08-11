@@ -12,6 +12,7 @@ import { users } from '../../users/entities/users.entity';
 import { categories } from '../../categories/entities/category.entity';
 import { DRIZZLE } from '../../common/constants/database.constants';
 import { transactions } from '../entities/transaction.entity';
+import { TransactionRow } from '../types/transaction.types';
 import { TransactionsRepository } from './transactions.repository';
 
 describe('TransactionsRepository', () => {
@@ -79,18 +80,16 @@ describe('TransactionsRepository', () => {
   }
 
   /** Unpaginated convenience view for tests that don't exercise slicing. */
-  function findAll(
-    userId: string,
-  ): ReturnType<TransactionsRepository['findAllByUserId']> {
-    return repository.findAllByUserId(userId, { limit: 100, offset: 0 });
+  async function findAll(userId: string): Promise<TransactionRow[]> {
+    return await repository.findAllByUserId(userId, { limit: 100, offset: 0 });
   }
 
   describe('create', () => {
-    it('inserts a row with timestamps and returns the full row', () => {
+    it('inserts a row with timestamps and returns the full row', async () => {
       const userId = createUser();
       const categoryId = createCategory(userId);
 
-      const row = repository.create({
+      const row = await repository.create({
         userId,
         categoryId,
         type: 'EXPENSE',
@@ -110,10 +109,10 @@ describe('TransactionsRepository', () => {
       expect(typeof row.updatedAt).toBe('number');
     });
 
-    it('stores null for an omitted categoryId', () => {
+    it('stores null for an omitted categoryId', async () => {
       const userId = createUser();
 
-      const row = repository.create({
+      const row = await repository.create({
         userId,
         categoryId: null,
         type: 'INCOME',
@@ -127,7 +126,7 @@ describe('TransactionsRepository', () => {
   });
 
   describe('findAllByUserId', () => {
-    it('orders by date DESC, then createdAt DESC (FR-004/FR-018)', () => {
+    it('orders by date DESC, then createdAt DESC (FR-004/FR-018)', async () => {
       const userId = createUser();
       const now = Date.now();
       const base = {
@@ -147,7 +146,7 @@ describe('TransactionsRepository', () => {
         ])
         .run();
 
-      const rows = findAll(userId);
+      const rows = await findAll(userId);
 
       expect(rows.map((r) => r.date)).toEqual([
         '2026-08-10',
@@ -159,7 +158,7 @@ describe('TransactionsRepository', () => {
       expect(rows[2].createdAt).toBe(now + 100);
     });
 
-    it('breaks date/createdAt ties by id DESC (ADR-0007 stable order)', () => {
+    it('breaks date/createdAt ties by id DESC (ADR-0007 stable order)', async () => {
       const userId = createUser();
       const now = Date.now();
       const base = {
@@ -180,14 +179,14 @@ describe('TransactionsRepository', () => {
         .returning()
         .all();
 
-      const listed = findAll(userId);
+      const listed = await findAll(userId);
 
       expect(listed.map((r) => r.id)).toEqual(
         [...rows].sort((a, b) => b.id.localeCompare(a.id)).map((r) => r.id),
       );
     });
 
-    it('slices by limit/offset (ADR-0007)', () => {
+    it('slices by limit/offset (ADR-0007)', async () => {
       const userId = createUser();
       const now = Date.now();
       const base = {
@@ -207,9 +206,18 @@ describe('TransactionsRepository', () => {
         ])
         .run();
 
-      const page1 = repository.findAllByUserId(userId, { limit: 2, offset: 0 });
-      const page2 = repository.findAllByUserId(userId, { limit: 2, offset: 2 });
-      const page3 = repository.findAllByUserId(userId, { limit: 2, offset: 4 });
+      const page1 = await repository.findAllByUserId(userId, {
+        limit: 2,
+        offset: 0,
+      });
+      const page2 = await repository.findAllByUserId(userId, {
+        limit: 2,
+        offset: 2,
+      });
+      const page3 = await repository.findAllByUserId(userId, {
+        limit: 2,
+        offset: 4,
+      });
 
       expect(page1.map((r) => r.date)).toEqual(['2026-08-05', '2026-08-04']);
       expect(page2.map((r) => r.date)).toEqual(['2026-08-03', '2026-08-02']);
@@ -219,10 +227,10 @@ describe('TransactionsRepository', () => {
       expect(new Set(ids).size).toBe(5);
     });
 
-    it("returns only the user's own transactions", () => {
+    it("returns only the user's own transactions", async () => {
       const userA = createUser('Alice', 'alice@example.com');
       const userB = createUser('Bob', 'bob@example.com');
-      repository.create({
+      await repository.create({
         userId: userA,
         categoryId: null,
         type: 'INCOME',
@@ -230,7 +238,7 @@ describe('TransactionsRepository', () => {
         description: 'a',
         date: '2026-08-01',
       });
-      repository.create({
+      await repository.create({
         userId: userB,
         categoryId: null,
         type: 'INCOME',
@@ -239,23 +247,23 @@ describe('TransactionsRepository', () => {
         date: '2026-08-02',
       });
 
-      const rows = findAll(userA);
+      const rows = await findAll(userA);
 
       expect(rows).toHaveLength(1);
       expect(rows[0].description).toBe('a');
     });
 
-    it('returns an empty array when the user has no transactions', () => {
+    it('returns an empty array when the user has no transactions', async () => {
       const userId = createUser();
-      expect(findAll(userId)).toEqual([]);
+      expect(await findAll(userId)).toEqual([]);
     });
   });
 
   describe('countByUserId', () => {
-    it('counts only the user’s own transactions (ADR-0007)', () => {
+    it('counts only the user’s own transactions (ADR-0007)', async () => {
       const userA = createUser('Alice', 'alice@example.com');
       const userB = createUser('Bob', 'bob@example.com');
-      repository.create({
+      await repository.create({
         userId: userA,
         categoryId: null,
         type: 'INCOME',
@@ -263,7 +271,7 @@ describe('TransactionsRepository', () => {
         description: 'a',
         date: '2026-08-01',
       });
-      repository.create({
+      await repository.create({
         userId: userA,
         categoryId: null,
         type: 'EXPENSE',
@@ -271,7 +279,7 @@ describe('TransactionsRepository', () => {
         description: 'b',
         date: '2026-08-02',
       });
-      repository.create({
+      await repository.create({
         userId: userB,
         categoryId: null,
         type: 'INCOME',
@@ -280,20 +288,20 @@ describe('TransactionsRepository', () => {
         date: '2026-08-03',
       });
 
-      expect(repository.countByUserId(userA)).toBe(2);
-      expect(repository.countByUserId(userB)).toBe(1);
+      expect(await repository.countByUserId(userA)).toBe(2);
+      expect(await repository.countByUserId(userB)).toBe(1);
     });
 
-    it('returns 0 when the user has no transactions', () => {
+    it('returns 0 when the user has no transactions', async () => {
       const userId = createUser();
-      expect(repository.countByUserId(userId)).toBe(0);
+      expect(await repository.countByUserId(userId)).toBe(0);
     });
   });
 
   describe('findByIdAndUserId', () => {
-    it('finds a transaction owned by the user', () => {
+    it('finds a transaction owned by the user', async () => {
       const userId = createUser();
-      const created = repository.create({
+      const created = await repository.create({
         userId,
         categoryId: null,
         type: 'INCOME',
@@ -302,16 +310,16 @@ describe('TransactionsRepository', () => {
         date: '2026-08-01',
       });
 
-      const found = repository.findByIdAndUserId(created.id, userId);
+      const found = await repository.findByIdAndUserId(created.id, userId);
 
       expect(found?.id).toBe(created.id);
       expect(found?.description).toBe('x');
     });
 
-    it("returns undefined for another user's transaction", () => {
+    it("returns undefined for another user's transaction", async () => {
       const userA = createUser('Alice', 'alice@example.com');
       const userB = createUser('Bob', 'bob@example.com');
-      const created = repository.create({
+      const created = await repository.create({
         userId: userA,
         categoryId: null,
         type: 'INCOME',
@@ -320,23 +328,23 @@ describe('TransactionsRepository', () => {
         date: '2026-08-01',
       });
 
-      const found = repository.findByIdAndUserId(created.id, userB);
+      const found = await repository.findByIdAndUserId(created.id, userB);
 
       expect(found).toBeUndefined();
     });
 
-    it('returns undefined for an unknown id', () => {
+    it('returns undefined for an unknown id', async () => {
       const userId = createUser();
       expect(
-        repository.findByIdAndUserId('does-not-exist', userId),
+        await repository.findByIdAndUserId('does-not-exist', userId),
       ).toBeUndefined();
     });
   });
 
   describe('update', () => {
-    it('updates fields and returns the updated row', () => {
+    it('updates fields and returns the updated row', async () => {
       const userId = createUser();
-      const created = repository.create({
+      const created = await repository.create({
         userId,
         categoryId: null,
         type: 'EXPENSE',
@@ -345,7 +353,7 @@ describe('TransactionsRepository', () => {
         date: '2026-08-10',
       });
 
-      const updated = repository.update(created.id, userId, {
+      const updated = await repository.update(created.id, userId, {
         amountCents: 5500,
         description: 'Jantar',
         updatedAt: 1780000000100,
@@ -357,10 +365,10 @@ describe('TransactionsRepository', () => {
       expect(updated?.updatedAt).toBe(1780000000100);
     });
 
-    it('clears categoryId when set to null (CA-006)', () => {
+    it('clears categoryId when set to null (CA-006)', async () => {
       const userId = createUser();
       const categoryId = createCategory(userId);
-      const created = repository.create({
+      const created = await repository.create({
         userId,
         categoryId,
         type: 'EXPENSE',
@@ -369,7 +377,7 @@ describe('TransactionsRepository', () => {
         date: '2026-08-10',
       });
 
-      const updated = repository.update(created.id, userId, {
+      const updated = await repository.update(created.id, userId, {
         categoryId: null,
         updatedAt: Date.now(),
       });
@@ -377,10 +385,10 @@ describe('TransactionsRepository', () => {
       expect(updated?.categoryId).toBeNull();
     });
 
-    it('returns undefined when the transaction is not owned by the user', () => {
+    it('returns undefined when the transaction is not owned by the user', async () => {
       const userA = createUser('Alice', 'alice@example.com');
       const userB = createUser('Bob', 'bob@example.com');
-      const created = repository.create({
+      const created = await repository.create({
         userId: userA,
         categoryId: null,
         type: 'INCOME',
@@ -389,7 +397,7 @@ describe('TransactionsRepository', () => {
         date: '2026-08-01',
       });
 
-      const updated = repository.update(created.id, userB, {
+      const updated = await repository.update(created.id, userB, {
         amountCents: 9999,
         updatedAt: Date.now(),
       });
@@ -399,9 +407,9 @@ describe('TransactionsRepository', () => {
   });
 
   describe('delete', () => {
-    it('deletes the row and returns true', () => {
+    it('deletes the row and returns true', async () => {
       const userId = createUser();
-      const created = repository.create({
+      const created = await repository.create({
         userId,
         categoryId: null,
         type: 'INCOME',
@@ -410,14 +418,16 @@ describe('TransactionsRepository', () => {
         date: '2026-08-01',
       });
 
-      expect(repository.delete(created.id, userId)).toBe(true);
-      expect(repository.findByIdAndUserId(created.id, userId)).toBeUndefined();
+      expect(await repository.delete(created.id, userId)).toBe(true);
+      expect(
+        await repository.findByIdAndUserId(created.id, userId),
+      ).toBeUndefined();
     });
 
-    it('returns false when the transaction is not owned by the user', () => {
+    it('returns false when the transaction is not owned by the user', async () => {
       const userA = createUser('Alice', 'alice@example.com');
       const userB = createUser('Bob', 'bob@example.com');
-      const created = repository.create({
+      const created = await repository.create({
         userId: userA,
         categoryId: null,
         type: 'INCOME',
@@ -426,15 +436,17 @@ describe('TransactionsRepository', () => {
         date: '2026-08-01',
       });
 
-      expect(repository.delete(created.id, userB)).toBe(false);
-      expect(repository.findByIdAndUserId(created.id, userA)).toBeDefined();
+      expect(await repository.delete(created.id, userB)).toBe(false);
+      expect(
+        await repository.findByIdAndUserId(created.id, userA),
+      ).toBeDefined();
     });
   });
 
   describe('sumByType', () => {
-    it('sums income and expense separately (FR-008)', () => {
+    it('sums income and expense separately (FR-008)', async () => {
       const userId = createUser();
-      repository.create({
+      await repository.create({
         userId,
         categoryId: null,
         type: 'INCOME',
@@ -442,7 +454,7 @@ describe('TransactionsRepository', () => {
         description: 'a',
         date: '2026-08-01',
       });
-      repository.create({
+      await repository.create({
         userId,
         categoryId: null,
         type: 'INCOME',
@@ -450,7 +462,7 @@ describe('TransactionsRepository', () => {
         description: 'b',
         date: '2026-08-02',
       });
-      repository.create({
+      await repository.create({
         userId,
         categoryId: null,
         type: 'EXPENSE',
@@ -459,20 +471,20 @@ describe('TransactionsRepository', () => {
         date: '2026-08-03',
       });
 
-      expect(repository.sumByType(userId, 'INCOME')).toBe(15000);
-      expect(repository.sumByType(userId, 'EXPENSE')).toBe(3000);
+      expect(await repository.sumByType(userId, 'INCOME')).toBe(15000);
+      expect(await repository.sumByType(userId, 'EXPENSE')).toBe(3000);
     });
 
-    it('returns 0 when there are no transactions of that type', () => {
+    it('returns 0 when there are no transactions of that type', async () => {
       const userId = createUser();
-      expect(repository.sumByType(userId, 'INCOME')).toBe(0);
-      expect(repository.sumByType(userId, 'EXPENSE')).toBe(0);
+      expect(await repository.sumByType(userId, 'INCOME')).toBe(0);
+      expect(await repository.sumByType(userId, 'EXPENSE')).toBe(0);
     });
 
-    it("does not include another user's transactions", () => {
+    it("does not include another user's transactions", async () => {
       const userA = createUser('Alice', 'alice@example.com');
       const userB = createUser('Bob', 'bob@example.com');
-      repository.create({
+      await repository.create({
         userId: userA,
         categoryId: null,
         type: 'INCOME',
@@ -480,7 +492,7 @@ describe('TransactionsRepository', () => {
         description: 'a',
         date: '2026-08-01',
       });
-      repository.create({
+      await repository.create({
         userId: userB,
         categoryId: null,
         type: 'INCOME',
@@ -489,14 +501,14 @@ describe('TransactionsRepository', () => {
         date: '2026-08-02',
       });
 
-      expect(repository.sumByType(userA, 'INCOME')).toBe(10000);
+      expect(await repository.sumByType(userA, 'INCOME')).toBe(10000);
     });
   });
 
   describe('cascade user → transactions (FR-011)', () => {
-    it("removes the user's transactions when the user row is deleted", () => {
+    it("removes the user's transactions when the user row is deleted", async () => {
       const userId = createUser();
-      repository.create({
+      await repository.create({
         userId,
         categoryId: null,
         type: 'INCOME',
@@ -507,15 +519,15 @@ describe('TransactionsRepository', () => {
 
       db.delete(users).where(eq(users.id, userId)).run();
 
-      expect(findAll(userId)).toEqual([]);
+      expect(await findAll(userId)).toEqual([]);
     });
   });
 
   describe('set null category → transactions (FR-010/SC-003)', () => {
-    it('sets categoryId to null when the category is deleted', () => {
+    it('sets categoryId to null when the category is deleted', async () => {
       const userId = createUser();
       const categoryId = createCategory(userId);
-      const created = repository.create({
+      const created = await repository.create({
         userId,
         categoryId,
         type: 'EXPENSE',
@@ -526,7 +538,7 @@ describe('TransactionsRepository', () => {
 
       db.delete(categories).where(eq(categories.id, categoryId)).run();
 
-      const found = repository.findByIdAndUserId(created.id, userId);
+      const found = await repository.findByIdAndUserId(created.id, userId);
       expect(found?.categoryId).toBeNull();
     });
   });
