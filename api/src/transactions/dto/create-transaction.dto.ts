@@ -1,6 +1,7 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 import { todayIso } from '../../common/utils/date.util';
+import { TransactionType } from '../types/transaction.types';
 
 /**
  * `YYYY-MM-DD` with REAL calendar validation (FR-013): the regex only checks
@@ -34,7 +35,9 @@ export const transactionDateSchema = z
  * `categoryId`: optional uuid; ownership is validated in the service (FR-003).
  */
 export const createTransactionSchema = z.object({
-  type: z.enum(['INCOME', 'EXPENSE']),
+  type: z.enum(
+    Object.values(TransactionType) as [TransactionType, ...TransactionType[]],
+  ),
   amountCents: z.number().int().positive(),
   description: z.string().trim().min(1).max(200),
   date: transactionDateSchema.default(() => todayIso()),

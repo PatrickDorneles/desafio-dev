@@ -55,6 +55,7 @@ src/
 - **DTOs via `nestjs-zod`:** use `createZodDto(MySchema)` in `dto/` and a global `ZodValidationPipe` — this keeps Zod as single source and documents the Swagger schemas automatically (ADR-0003). Don't hand-roll a validation pipe.
 - Parse at the boundary with `safeParse`; map failures to structured 4xx responses.
 - Keep contracts shared/consistent with the UI (see the `zod-shared-schemas` skill).
+- **Domain enums are `as const` objects (ADR-0006):** model closed string-valued domains as `export const X = { A: 'A', B: 'B' } as const` + `export type X = (typeof X)[keyof typeof X]` in the module's `types/` (ADR-0005). Reference the const from Zod: `z.enum(Object.values(X) as [X, ...X[]])`, and use `X.A` in behavior code — no TS native `enum` (nominal typing forces casts at the Zod/DB boundaries) and no bare literal unions (vocabulary drift).
 
 ## Testing
 

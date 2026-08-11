@@ -1,6 +1,7 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 import { transactionDateSchema } from './create-transaction.dto';
+import { TransactionType } from '../types/transaction.types';
 
 /**
  * PATCH /transactions/:id — Spec 003, §9.
@@ -11,7 +12,14 @@ import { transactionDateSchema } from './create-transaction.dto';
  */
 export const updateTransactionSchema = z
   .object({
-    type: z.enum(['INCOME', 'EXPENSE']).optional(),
+    type: z
+      .enum(
+        Object.values(TransactionType) as [
+          TransactionType,
+          ...TransactionType[],
+        ],
+      )
+      .optional(),
     amountCents: z.number().int().positive().optional(),
     description: z.string().trim().min(1).max(200).optional(),
     date: transactionDateSchema.optional(),

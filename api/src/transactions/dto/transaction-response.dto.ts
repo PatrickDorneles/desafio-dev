@@ -1,5 +1,6 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
+import { TransactionType } from '../types/transaction.types';
 
 /**
  * Public transaction response shape — Spec 003, §9.
@@ -12,7 +13,9 @@ export const transactionResponseSchema = z.object({
   id: z.string(),
   userId: z.string(),
   categoryId: z.string().nullable(),
-  type: z.enum(['INCOME', 'EXPENSE']),
+  type: z.enum(
+    Object.values(TransactionType) as [TransactionType, ...TransactionType[]],
+  ),
   amountCents: z.number(),
   description: z.string(),
   date: z.string(),

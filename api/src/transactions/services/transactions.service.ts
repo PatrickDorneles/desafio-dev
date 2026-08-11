@@ -10,6 +10,7 @@ import { TransactionsRepository } from '../repositories/transactions.repository'
 import {
   TransactionRow,
   TransactionSummary,
+  TransactionType,
   UpdateTransactionData,
 } from '../types/transaction.types';
 
@@ -109,11 +110,11 @@ export class TransactionsService {
   getSummary(userId: string): TransactionSummary {
     const totalIncomeCents = this.transactionsRepository.sumByType(
       userId,
-      'INCOME',
+      TransactionType.INCOME,
     );
     const totalExpenseCents = this.transactionsRepository.sumByType(
       userId,
-      'EXPENSE',
+      TransactionType.EXPENSE,
     );
     return {
       totalIncomeCents,
