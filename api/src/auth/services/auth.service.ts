@@ -30,7 +30,7 @@ export class AuthService {
     name,
     email,
     password,
-  }: RegisterInput): Promise<UserProfile> {
+  }: RegisterInput): Promise<LoginResult> {
     // Email is already normalized by the DTO; normalize defensively (FR-010).
     const normalizedEmail = email.trim().toLowerCase();
 
@@ -49,7 +49,10 @@ export class AuthService {
         email: normalizedEmail,
         passwordHash,
       });
-      return this.toProfile(user);
+      // Spec 004 FR-002: register auto-logs the user in — return the access
+      // token like login, so the UI enters the session in one round-trip.
+      const accessToken = await this.jwtService.signAsync({ sub: user.id });
+      return { accessToken, user: this.toProfile(user) };
     } catch (error) {
       // DB-level uniqueness (FR-011): simultaneous duplicate registrations → 409.
       if (this.isUniqueConstraintError(error)) {

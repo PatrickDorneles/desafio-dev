@@ -33,6 +33,9 @@ async function bootstrap() {
 
   app.enableCors({
     origin: '*',
+    // @fastify/cors defaults methods to GET,HEAD,POST — PATCH/DELETE are
+    // required by the UI for transactions and categories (Spec 004 FR-019/023).
+    methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
 
   app.useGlobalFilters(new GlobalExceptionFilter());

@@ -41,7 +41,7 @@ describe('Auth (e2e)', () => {
     password: 'senha-forte-123',
   };
 
-  it('POST /auth/register → 201, body has NO passwordHash (CA-001/SC-001)', async () => {
+  it('POST /auth/register → 201, returns accessToken + user without passwordHash (FR-002/CA-001/SC-001)', async () => {
     const res = await app.inject({
       method: 'POST',
       url: '/auth/register',
@@ -49,14 +49,15 @@ describe('Auth (e2e)', () => {
     });
 
     expect(res.statusCode).toBe(201);
-    const profile = json<UserProfileBody>(res);
-    expect(profile).not.toHaveProperty('passwordHash');
-    expect(profile).toMatchObject({
+    const body = json<LoginBody>(res);
+    expect(typeof body.accessToken).toBe('string');
+    expect(body.user).not.toHaveProperty('passwordHash');
+    expect(body.user).toMatchObject({
       name: 'Maria Silva',
       email: 'maria@example.com',
     });
-    expect(typeof profile.id).toBe('string');
-    expect(typeof profile.createdAt).toBe('number');
+    expect(typeof body.user.id).toBe('string');
+    expect(typeof body.user.createdAt).toBe('number');
   });
 
   it('POST /auth/register duplicate email (different case) → 409 (CA-002)', async () => {

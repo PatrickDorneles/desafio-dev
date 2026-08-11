@@ -29,15 +29,21 @@ export class AuthController {
 
   @Public()
   @Post('register')
-  @ApiOperation({ summary: 'Register a new user' })
+  @ApiOperation({ summary: 'Register a new user (auto-login, Spec 004 FR-002)' })
   @ApiResponse({
     status: 201,
-    description: 'User created',
-    type: UserProfileDto,
+    description: 'User created with access token',
+    schema: {
+      type: 'object',
+      properties: {
+        accessToken: { type: 'string' },
+        user: { $ref: getSchemaPath(UserProfileDto) },
+      },
+    },
   })
   @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 409, description: 'Email already registered' })
-  register(@Body() dto: RegisterDto): Promise<UserProfile> {
+  register(@Body() dto: RegisterDto): Promise<LoginResult> {
     return this.authService.register(dto);
   }
 

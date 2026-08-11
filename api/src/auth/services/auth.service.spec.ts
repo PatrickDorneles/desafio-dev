@@ -60,7 +60,7 @@ describe('AuthService', () => {
   });
 
   describe('register', () => {
-    it('hashes with bcrypt cost 12, normalizes email, and returns profile without passwordHash', async () => {
+    it('hashes with bcrypt cost 12, normalizes email, and returns accessToken + profile without passwordHash (FR-002)', async () => {
       const hashSpy = jest
         .spyOn(bcrypt, 'hash')
         .mockResolvedValue('hashed-password' as never);
@@ -81,13 +81,17 @@ describe('AuthService', () => {
         email: 'maria@example.com',
         passwordHash: 'hashed-password',
       });
+      expect(jwtService.signAsync).toHaveBeenCalledWith({ sub: 'uuid-1' });
       expect(result).toEqual({
-        id: 'uuid-1',
-        name: 'Maria Silva',
-        email: 'maria@example.com',
-        createdAt: 1780000000000,
+        accessToken: 'jwt-token',
+        user: {
+          id: 'uuid-1',
+          name: 'Maria Silva',
+          email: 'maria@example.com',
+          createdAt: 1780000000000,
+        },
       });
-      expect(result).not.toHaveProperty('passwordHash');
+      expect(result.user).not.toHaveProperty('passwordHash');
     });
 
     it('pre-checks findByEmail and skips hashing on duplicates (FR-011)', async () => {
