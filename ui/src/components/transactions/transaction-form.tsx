@@ -138,93 +138,97 @@ export function TransactionForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-4">
-      <TypeSegmented value={values.type} onChange={(type) => setField("type", type)} />
+    <form onSubmit={handleSubmit} noValidate className="flex min-h-0 flex-1 flex-col">
+      {/* Scrolls independently; the footer bar stays pinned below it, flush to
+          the modal's bottom edge — no negative-margin breakout needed. */}
+      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 pt-2">
+        <TypeSegmented value={values.type} onChange={(type) => setField("type", type)} />
 
-      <Field id="transaction-amount" label="Valor" error={fieldError("amount")}>
-        <div className="relative">
-          <span className="pointer-events-none absolute inset-y-0 left-2.5 inline-flex items-center text-sm text-muted-foreground">
-            R$
-          </span>
+        <Field id="transaction-amount" label="Valor" error={fieldError("amount")}>
+          <div className="relative">
+            <span className="pointer-events-none absolute inset-y-0 left-2.5 inline-flex items-center text-sm text-muted-foreground">
+              R$
+            </span>
+            <Input
+              id="transaction-amount"
+              name="amount"
+              inputMode="decimal"
+              autoComplete="off"
+              placeholder="0,00"
+              value={values.amount}
+              onChange={(event) => setField("amount", event.target.value)}
+              aria-invalid={Boolean(fieldError("amount"))}
+              className="pl-8"
+            />
+          </div>
+        </Field>
+
+        <Field id="transaction-description" label="Descrição" error={fieldError("description")}>
           <Input
-            id="transaction-amount"
-            name="amount"
-            inputMode="decimal"
-            autoComplete="off"
-            placeholder="0,00"
-            value={values.amount}
-            onChange={(event) => setField("amount", event.target.value)}
-            aria-invalid={Boolean(fieldError("amount"))}
-            className="pl-8"
+            id="transaction-description"
+            name="description"
+            placeholder="Ex.: Supermercado do mês"
+            maxLength={200}
+            value={values.description}
+            onChange={(event) => setField("description", event.target.value)}
+            aria-invalid={Boolean(fieldError("description"))}
           />
-        </div>
-      </Field>
+        </Field>
 
-      <Field id="transaction-description" label="Descrição" error={fieldError("description")}>
-        <Input
-          id="transaction-description"
-          name="description"
-          placeholder="Ex.: Supermercado do mês"
-          maxLength={200}
-          value={values.description}
-          onChange={(event) => setField("description", event.target.value)}
-          aria-invalid={Boolean(fieldError("description"))}
-        />
-      </Field>
+        <Field id="transaction-date" label="Data" error={fieldError("date")}>
+          <Input
+            id="transaction-date"
+            name="date"
+            type="date"
+            value={values.date}
+            onChange={(event) => setField("date", event.target.value)}
+            aria-invalid={Boolean(fieldError("date"))}
+            className="[color-scheme:dark]"
+          />
+        </Field>
 
-      <Field id="transaction-date" label="Data" error={fieldError("date")}>
-        <Input
-          id="transaction-date"
-          name="date"
-          type="date"
-          value={values.date}
-          onChange={(event) => setField("date", event.target.value)}
-          aria-invalid={Boolean(fieldError("date"))}
-          className="[color-scheme:dark]"
-        />
-      </Field>
+        <Field id="transaction-category" label="Categoria">
+          <Select
+            value={values.categoryId === "" ? CATEGORY_NONE : values.categoryId}
+            onValueChange={(value) =>
+              setField("categoryId", value === CATEGORY_NONE ? "" : value)
+            }
+          >
+            <SelectTrigger id="transaction-category" className="w-full">
+              <SelectValue placeholder="Sem categoria" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={CATEGORY_NONE}>Sem categoria</SelectItem>
+              {categories.data?.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.color && (
+                    <span
+                      aria-hidden
+                      className="size-2 rounded-full"
+                      style={{ backgroundColor: category.color }}
+                    />
+                  )}
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {categories.isSuccess && categories.data.length === 0 && (
+            <p className="text-xs text-muted-foreground">
+              Você ainda não tem categorias — crie algumas em “Gerenciar categorias”.
+            </p>
+          )}
+        </Field>
 
-      <Field id="transaction-category" label="Categoria">
-        <Select
-          value={values.categoryId === "" ? CATEGORY_NONE : values.categoryId}
-          onValueChange={(value) =>
-            setField("categoryId", value === CATEGORY_NONE ? "" : value)
-          }
-        >
-          <SelectTrigger id="transaction-category" className="w-full">
-            <SelectValue placeholder="Sem categoria" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={CATEGORY_NONE}>Sem categoria</SelectItem>
-            {categories.data?.map((category) => (
-              <SelectItem key={category.id} value={category.id}>
-                {category.color && (
-                  <span
-                    aria-hidden
-                    className="size-2 rounded-full"
-                    style={{ backgroundColor: category.color }}
-                  />
-                )}
-                {category.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {categories.isSuccess && categories.data.length === 0 && (
-          <p className="text-xs text-muted-foreground">
-            Você ainda não tem categorias — crie algumas em “Gerenciar categorias”.
-          </p>
+        {serverError && (
+          <Alert variant="destructive">
+            <TriangleAlert className="size-4" aria-hidden />
+            <AlertDescription>{serverError}</AlertDescription>
+          </Alert>
         )}
-      </Field>
+      </div>
 
-      {serverError && (
-        <Alert variant="destructive">
-          <TriangleAlert className="size-4" aria-hidden />
-          <AlertDescription>{serverError}</AlertDescription>
-        </Alert>
-      )}
-
-      <DialogFooter className="sticky bottom-0 z-10 -mt-2 bg-muted/80 backdrop-blur-sm">
+      <DialogFooter className="mx-0 mb-0 bg-muted/80 backdrop-blur-sm">
         <Button
           type="button"
           variant="outline"
