@@ -68,7 +68,7 @@ Todas as rotas (exceto `/health`, `/auth/register`, `/auth/login`) exigem `Autho
 | Método | Rota | Descrição |
 |---|---|---|
 | `GET` | `/health` | Health check (público) |
-| `POST` | `/auth/register` | Cadastro `{ name, email, password }` → `201` perfil |
+| `POST` | `/auth/register` | Cadastro `{ name, email, password }` → `201` `{ accessToken, user }` (auto-login) |
 | `POST` | `/auth/login` | Login → `200` `{ accessToken, user }` |
 | `GET` | `/auth/me` | Perfil do usuário autenticado |
 | `POST` | `/categories` | Criar categoria `{ name, color?, icon? }` |
@@ -101,7 +101,7 @@ src/
 └── database/               # conexão Drizzle (token DRIZZLE) + auto-migrate
 ```
 
-Convenções detalhadas em [`AGENTS.md`](./AGENTS.md) e decisões de arquitetura em [`docs/adr/`](../docs/adr/) (ADR-0001 a 0003).
+Convenções detalhadas em [`AGENTS.md`](./AGENTS.md) e decisões de arquitetura em [`docs/adr/`](../docs/adr/) (ADR-0001 a 0009).
 
 ## Documentação
 

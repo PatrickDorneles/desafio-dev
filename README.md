@@ -109,12 +109,12 @@ Se sua aplicação utilizar **banco de dados relacional** (como PostgreSQL, MySQ
 
 # 🧑🏽‍💻 Implementação
 
-Status atual: **API completa** (autenticação JWT, categorias, movimentações + resumo, testes unitários e e2e, Swagger). A UI (Next.js) está como scaffold — o planejamento da UI está em `docs/tasks.md`.
+Status atual: **solução completa** — API (autenticação JWT, categorias, movimentações + resumo financeiro, testes unitários e e2e, Swagger) e UI (landing page, dashboard com resumo, CRUD de categorias e movimentações, tema dark navy, testes e2e com Playwright).
 
 ## Stack
 
 - **API:** NestJS 11 · Fastify · Drizzle ORM + SQLite · Zod · JWT + bcrypt · Swagger · Jest
-- **UI:** Next.js 15 (App Router) · React 19 · Tailwind CSS v4 (scaffold)
+- **UI:** Next.js 15 (App Router) · React 19 · Tailwind CSS v4 · shadcn/ui · TanStack Query · Zod · Playwright
 
 ## Como rodar a API
 
@@ -129,13 +129,19 @@ npm run start:dev         # http://localhost:3001
 - Migrations são aplicadas automaticamente na inicialização (nenhuma etapa manual).
 - Instruções completas (variáveis de ambiente, endpoints, testes, migrations): [`api/README.md`](./api/README.md).
 
-## Como rodar a UI (scaffold)
+## Como rodar a UI
+
+> Pré-requisito: a API rodando em `http://localhost:3001` (ver seção anterior).
 
 ```bash
 cd ui
 npm install
+cp .env.example .env      # opcional — default aponta para http://localhost:3001
 npm run dev               # http://localhost:3000
 ```
+
+- `NEXT_PUBLIC_API_URL`: URL base da API (default: `http://localhost:3001`).
+- Instruções completas: [`ui/README.md`](./ui/README.md).
 
 ## Testes
 
@@ -144,6 +150,11 @@ cd api
 npm test                  # unitários
 npm run test:e2e          # e2e
 npm run lint
+
+cd ui
+npm run lint              # eslint
+npm run build             # type-check + build
+npx playwright test       # e2e (fluxos principais; sobe API + UI automaticamente, se preciso)
 ```
 
 ## Estrutura
@@ -157,7 +168,7 @@ ui/              # frontend Next.js
 ## Documentação
 
 - Especificações e critérios de aceitação: [`docs/specs/`](./docs/specs/)
-- Decisões de arquitetura (ADRs 0001–0003): [`docs/adr/`](./docs/adr/)
+- Decisões de arquitetura (ADRs 0001–0009): [`docs/adr/`](./docs/adr/)
 - Roadmap de implementação: [`docs/tasks.md`](./docs/tasks.md)
-- Guia operacional da API: [`api/README.md`](./api/README.md)
+- Guias operacionais: [`api/README.md`](./api/README.md) e [`ui/README.md`](./ui/README.md)
 
