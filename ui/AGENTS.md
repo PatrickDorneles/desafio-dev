@@ -43,4 +43,5 @@ Conventions for the `ui/` package. Read the root `AGENTS.md` first.
 ## Verification
 
 - `npm run build` and `npm run lint` must pass before finishing a task.
+- UI e2e (Playwright, T-058): `npx playwright test` — main journeys against the real stack; unique user per test (isolation).
 - Responsive + accessible UI is expected (use the `frontend-design` / `web-design-guidelines` skills when touching UI).

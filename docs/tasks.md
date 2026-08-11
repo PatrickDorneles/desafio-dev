@@ -67,7 +67,8 @@ Convenções: `AGENTS.md` (raiz + `api/` + `ui/`), ADRs 0001–0009.
 - [ ] **T-055 Editar/excluir movimentação** — modal pré-preenchido (`PATCH`), exclusão com confirmação (`DELETE`), desvincular categoria (`categoryId: null`) (FR-019/020/021). *Verificar:* manual (build/lint).
 - [ ] **T-056 Modal "Gerenciar categorias"** — listar/criar/editar/excluir; aviso de `SET NULL` na exclusão de categoria em uso; `409` exibido no form; seletor de categoria do formulário de movimentação atualizado (FR-023/024/025; CA-008/009). *Verificar:* manual (build/lint).
 - [ ] **T-057 Polimento da UI** — copy pt-BR revisada, ícones consistentes, responsividade mobile, a11y básica (foco em modais, labels, aria) (FR-028/030/031). *Verificar:* `npm run build` · `npm run lint` · revisão de design/responsiva.
-- [ ] **T-058 Verificação total** — `npm run lint` · `npm run build` na `ui/` com a API rodando; checklist completo dos fluxos (cadastro → login → CRUD movimentações/categorias → logout → expiração → `401` → volta para `/`). *Verificar:* checklist manual (CA-001..CA-012, SC-001..SC-004).
+- [ ] **T-058 UI tests (Playwright)** — `@playwright/test` + `playwright.config.ts` (webServer: UI `next dev` + API com `DB_PATH` de teste isolado); chromium; e2e das jornadas principais: cadastro → login → criar/editar/excluir movimentação e categoria → logout → token inválido (`401`) → volta para `/`; usuário único por teste (isolamento). *Verificar:* suíte Playwright verde contra a stack real.
+- [ ] **T-059 Verificação total** — `npm run lint` · `npm run build` · suíte Playwright na `ui/` com a API rodando; checklist completo dos fluxos (cadastro → login → CRUD movimentações/categorias → logout → expiração → `401` → volta para `/`). *Verificar:* gates + checklist manual (CA-001..CA-012, SC-001..SC-005).
 
 ## Fora de escopo (por decisão)
 

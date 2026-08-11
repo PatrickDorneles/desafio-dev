@@ -1,7 +1,7 @@
 ---
 spec-id: "004"
 title: "Interface web (landing + dashboard)"
-status: "Proposed"
+status: "Approved"
 author: "PatrickDorneles"
 created: "2026-08-11"
 updated: "2026-08-11"
@@ -24,7 +24,6 @@ related-adrs: ["0002-jwt-access-token", "0007-paginacao-por-pagina", "0008-sessa
 - **Não** há i18n/multi-idioma (pt-BR fixo) nem toggle claro/escuro (tema escuro fixo — preferência).
 - **Não** há recuperação/troca de senha, edição de perfil, refresh token nem logout server-side (a API não suporta — ADR-0002; logout = descarte do token no cliente).
 - **Não** há filtros/busca na tabela em v1 (filtros continuam possíveis client-side, conforme Spec 003, mas ficam fora deste ciclo).
-- **Não** há suíte automatizada de UI (component/e2e) em v1 — verificação via `lint` + `build` + fluxos manuais; Playwright/component tests ficam como follow-up (Open Questions).
 - **Não** há PWA/offline, auditoria formal de acessibilidade (WCAG) nem pacote compartilhado de schemas (ver ADR-0009).
 - **Não** há SSR para páginas autenticadas (ver ADR-0008).
 
@@ -35,6 +34,7 @@ related-adrs: ["0002-jwt-access-token", "0007-paginacao-por-pagina", "0008-sessa
 - Sessão: token em `localStorage`, dados autenticados client-side via TanStack Query (ADR-0008).
 - Contratos: zod espelhado em `ui/src/lib/schemas/`, API como fonte da verdade (ADR-0009).
 - Nenhuma mudança na API nesta spec; todos os endpoints consumidos já existem (Specs 001–003).
+- Suíte e2e de UI com **Playwright** cobrindo as jornadas principais (SC-005) — incluída no v1 na aprovação desta spec.
 - Componentização: componentes em `src/components/` (shadcn em `src/components/ui/`), hooks em `src/hooks/` (regra dos hooks), schemas em `src/lib/schemas/`, API client em `src/lib/api/`.
 
 ## 4. User Stories
@@ -214,11 +214,11 @@ Todos os endpoints já existem e estão documentados nas Specs 001–003 e no Sw
 - **SC-002**: fluxos manuais completos contra a API real: cadastro → login → CRUD de movimentações e categorias → logout; token expirado → `401` → volta para `/`.
 - **SC-003**: navegação de páginas na tabela e abertura de modais **não recarregam a página** (client-side, TanStack Query).
 - **SC-004**: nenhuma mudança no código da `api/` durante a Fase 6 (contratos consumidos como estão).
+- **SC-005**: a suíte Playwright da UI cobre as jornadas principais — cadastro → login → CRUD de movimentações e categorias → logout → `401` (token inválido) → volta para `/` — e passa contra a stack real (API + UI rodando).
 
 ## 12. Perguntas em aberto (Open Questions)
 
-- [ ] **[NEEDS CLARIFICATION]** Testes automatizados de UI (Playwright/component tests) — manter como follow-up pós-v1 ou incluir no escopo? (default: follow-up)
-- [ ] **[NEEDS CLARIFICATION]** Filtros client-side na tabela (data/categoria/tipo) — fora do v1 ou incluir? (default: fora do v1)
+- [ ] **[NEEDS CLARIFICATION]** Filtros client-side na tabela (data/categoria/tipo) — fora do v1 (decisão confirmada na aprovação); reavaliar como follow-up.
 - [ ] Detalhes visuais finais (tom exato do tema, densidade da tabela, ícones) — decididos na implementação pela diretriz de design, sem nova spec.
 
 ## 13. Referências / Evidências
@@ -229,4 +229,4 @@ Todos os endpoints já existem e estão documentados nas Specs 001–003 e no Sw
 - [ADR-0008](./0008-sessao-e-fetch-na-ui.md) — sessão em `localStorage`, fetch client-side.
 - [ADR-0009](./0009-contratos-zod-espelhados-na-ui.md) — schemas espelhados na UI.
 - [ui/AGENTS.md](../../ui/AGENTS.md) — stack e convenções da UI.
-- Evidências: `npm run lint` · `npm run build` · fluxos manuais com a API rodando.
+- Evidências: `npm run lint` · `npm run build` · suíte Playwright (T-058) · fluxos manuais com a API rodando.
