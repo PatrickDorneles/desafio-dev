@@ -20,7 +20,7 @@ test.describe("transactions (FR-016..FR-022, CA-006/007)", () => {
 
     // --- create a category first (CA-008) ---
     await page.getByRole("button", { name: "Gerenciar categorias" }).click();
-    await createCategory(page, "Alimentação", "#34d399");
+    await createCategory(page, "Alimentação", "#2563eb");
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog")).toHaveCount(0);
 

@@ -19,18 +19,20 @@ import { cn } from "@/lib/utils";
 import { Loader2, Paintbrush, Plus, TriangleAlert } from "lucide-react";
 
 /**
- * Small preset palette — echoes the emerald accent plus usable tones on the
- * dark surface. `input[type="color"]` covers anything outside it.
+ * Small preset palette — navy-coherent swatches (blue family plus a teal,
+ * indigo, amber and neutral) that read well on the dark surface and stay
+ * distinguishable from income (green) and expense (soft red). The
+ * `input[type="color"]` covers anything outside it.
  */
 const COLOR_PRESETS = [
-  "#34d399",
-  "#22d3ee",
-  "#60a5fa",
+  "#2563eb",
+  "#3b82f6",
+  "#38bdf8",
+  "#2dd4bf",
+  "#818cf8",
   "#a78bfa",
-  "#f472b6",
-  "#fb7185",
   "#fbbf24",
-  "#f97316",
+  "#94a3b8",
 ];
 
 interface CategoryFormValues {

@@ -8,9 +8,10 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
   --font-display: var(--font-display);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-display);
   --color-income: var(--income);
   --color-expense: var(--expense);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -86,77 +87,86 @@
   }
 }
 
+/*
+ * Fluxo — deep-navy financial register.
+ *
+ * The app is forced dark (`html.dark`), so `.dark` is the real theme: a
+ * blue-tinted near-black canvas, one-step-lifted navy surfaces, hairline
+ * blue-tinted borders and a soft off-white ink. Brand identity is the navy
+ * family around #003087; on the dark canvas the interactive sibling shifts
+ * to a lighter blue (≈ #2563EB) so white-on-primary keeps ≥ 4.5:1.
+ */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: oklch(0.97 0.006 260);
+  --foreground: oklch(0.25 0.05 262);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.25 0.05 262);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --income: oklch(0.72 0.16 162);
-  --expense: oklch(0.64 0.19 25);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.25 0.05 262);
+  --primary: #003087;
+  --primary-foreground: oklch(0.985 0.005 262);
+  --income: oklch(0.52 0.14 163);
+  --expense: oklch(0.55 0.2 27);
+  --secondary: oklch(0.93 0.012 260);
+  --secondary-foreground: oklch(0.25 0.05 262);
+  --muted: oklch(0.93 0.012 260);
+  --muted-foreground: oklch(0.47 0.035 262);
+  --accent: oklch(0.91 0.016 260);
+  --accent-foreground: oklch(0.25 0.05 262);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --border: oklch(0.84 0.02 260);
+  --input: oklch(0.84 0.02 260);
+  --ring: oklch(0.4 0.11 262);
+  --chart-1: oklch(0.45 0.15 262);
+  --chart-2: oklch(0.6 0.1 250);
+  --chart-3: oklch(0.55 0.1 230);
+  --chart-4: oklch(0.5 0.08 300);
+  --chart-5: oklch(0.65 0.08 200);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: oklch(0.97 0.006 260);
+  --sidebar-foreground: oklch(0.25 0.05 262);
+  --sidebar-primary: #003087;
+  --sidebar-primary-foreground: oklch(0.985 0.005 262);
+  --sidebar-accent: oklch(0.91 0.016 260);
+  --sidebar-accent-foreground: oklch(0.25 0.05 262);
+  --sidebar-border: oklch(0.84 0.02 260);
+  --sidebar-ring: oklch(0.4 0.11 262);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.74 0.15 162);
-  --primary-foreground: oklch(0.17 0.04 160);
-  --income: oklch(0.82 0.13 162);
-  --expense: oklch(0.72 0.17 25);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: oklch(0.16 0.02 262);
+  --foreground: oklch(0.96 0.008 255);
+  --card: oklch(0.21 0.026 262);
+  --card-foreground: oklch(0.96 0.008 255);
+  --popover: oklch(0.22 0.026 262);
+  --popover-foreground: oklch(0.96 0.008 255);
+  --primary: oklch(0.546 0.196 262.4);
+  --primary-foreground: oklch(0.985 0.005 262);
+  --income: oklch(0.78 0.21 163);
+  --expense: oklch(0.704 0.191 22.2);
+  --secondary: oklch(0.27 0.032 262);
+  --secondary-foreground: oklch(0.96 0.008 255);
+  --muted: oklch(0.24 0.028 262);
+  --muted-foreground: oklch(0.68 0.03 260);
+  --accent: oklch(0.29 0.038 262);
+  --accent-foreground: oklch(0.96 0.008 255);
+  --destructive: oklch(0.637 0.237 25.3);
+  --border: oklch(0.55 0.09 262 / 16%);
+  --input: oklch(0.55 0.09 262 / 22%);
+  --ring: oklch(0.72 0.1 250);
+  --chart-1: oklch(0.55 0.19 262);
+  --chart-2: oklch(0.72 0.1 250);
+  --chart-3: oklch(0.68 0.12 230);
+  --chart-4: oklch(0.6 0.1 300);
+  --chart-5: oklch(0.76 0.1 200);
+  --sidebar: oklch(0.21 0.026 262);
+  --sidebar-foreground: oklch(0.96 0.008 255);
+  --sidebar-primary: oklch(0.546 0.196 262.4);
+  --sidebar-primary-foreground: oklch(0.985 0.005 262);
+  --sidebar-accent: oklch(0.29 0.038 262);
+  --sidebar-accent-foreground: oklch(0.96 0.008 255);
+  --sidebar-border: oklch(0.55 0.09 262 / 16%);
+  --sidebar-ring: oklch(0.72 0.1 250);
 }
 
 @layer base {
@@ -168,18 +178,6 @@
   }
   html {
     @apply font-sans;
-  }
-
-  /* Film-grain overlay — subtle texture across the whole app, including modals. */
-  body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: 60;
-    pointer-events: none;
-    opacity: 0.025;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-    background-repeat: repeat;
   }
 }
 

@@ -68,7 +68,6 @@ export function SummaryCards() {
   }
 
   const data = summary.data;
-  const balanceTone: Tone = data.balanceCents >= 0 ? "income" : "expense";
 
   return (
     <section aria-label="Resumo financeiro">
@@ -87,12 +86,15 @@ export function SummaryCards() {
           value={formatBRL(data.totalExpenseCents)}
           delay={70}
         />
+        {/* Saldo leads in the neutral ink — the +/- of the value and the
+            arrows already carry the meaning; no semantic color on balance. */}
         <SummaryCard
           label="Saldo"
           icon={Scale}
-          tone={balanceTone}
+          tone="neutral"
           value={formatBRL(data.balanceCents)}
           delay={140}
+          large
         />
       </div>
     </section>
@@ -105,12 +107,15 @@ function SummaryCard({
   tone,
   value,
   delay,
+  large = false,
 }: {
   label: string;
   icon: LucideIcon;
   tone: Tone;
   value: string;
   delay: number;
+  /** Balance leads: the headline figure gets the larger display size. */
+  large?: boolean;
 }) {
   const styles = toneStyles[tone];
   return (
@@ -123,7 +128,10 @@ function SummaryCard({
           <p className="text-sm text-muted-foreground">{label}</p>
           <p
             className={cn(
-              "mt-2 truncate font-display text-2xl font-medium tracking-tight tabular-nums sm:text-[1.7rem]",
+              "mt-2 truncate font-display font-medium tracking-tight tabular-nums",
+              large
+                ? "text-3xl sm:text-[2rem]"
+                : "text-2xl sm:text-[1.7rem]",
               styles.text,
             )}
           >

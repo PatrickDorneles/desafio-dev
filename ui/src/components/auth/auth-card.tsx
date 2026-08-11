@@ -65,7 +65,7 @@ export function AuthCard() {
   }
 
   return (
-    <Card className="animate-scale-in w-full max-w-md self-center shadow-[0_28px_90px_-36px_oklch(0.55_0.12_162/0.45)]">
+    <Card className="animate-scale-in w-full max-w-md self-center shadow-[0_28px_90px_-36px_oklch(0.08_0.05_262/0.7)]">
       <CardHeader>
         <CardTitle className="font-display text-xl">
           {tab === "login" ? "Entrar" : "Criar conta"}

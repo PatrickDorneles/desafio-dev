@@ -158,7 +158,7 @@ export function TransactionForm({
               value={values.amount}
               onChange={(event) => setField("amount", event.target.value)}
               aria-invalid={Boolean(fieldError("amount"))}
-              className="pl-8"
+              className="pl-8 tabular-nums"
             />
           </div>
         </Field>

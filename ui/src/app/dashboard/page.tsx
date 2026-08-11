@@ -69,10 +69,10 @@ export default function DashboardPage() {
 
   return (
     <div className="relative min-h-dvh">
-      {/* Subtle top glow, much calmer than the landing. */}
+      {/* Subtle top wash, calmer than the landing — flat navy, no glow. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-64 bg-[radial-gradient(45%_100%_at_50%_0%,oklch(0.62_0.14_162/0.1),transparent_75%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-64 bg-[radial-gradient(45%_100%_at_50%_0%,oklch(0.42_0.12_262/0.16),transparent_75%)]"
       />
 
       <DashboardHeader

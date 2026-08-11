@@ -23,11 +23,10 @@ const features = [
 export default function Home() {
   return (
     <main className="relative flex min-h-dvh flex-col overflow-hidden">
-      {/* Ambient background: emerald glow + hairline grid, both masked. */}
+      {/* Ambient background: a calm navy wash — flat surfaces, no grain, no glow. */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(52%_42%_at_74%_0%,oklch(0.62_0.14_162/0.17),transparent_70%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(40%_36%_at_8%_100%,oklch(0.55_0.12_250/0.09),transparent_70%)]" />
-        <div className="absolute inset-0 [background-image:linear-gradient(to_right,oklch(1_0_0/0.04)_1px,transparent_1px),linear-gradient(to_bottom,oklch(1_0_0/0.04)_1px,transparent_1px)] [background-size:64px_64px] [mask-image:radial-gradient(78%_62%_at_50%_30%,black,transparent)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(58%_46%_at_72%_-6%,oklch(0.42_0.12_262/0.22),transparent_70%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(42%_38%_at_4%_104%,oklch(0.3_0.07_262/0.16),transparent_70%)]" />
       </div>
 
       <div className="mx-auto flex w-full max-w-6xl flex-col px-5 sm:px-8 lg:px-10">
@@ -40,11 +39,11 @@ export default function Home() {
 
         <section className="flex flex-1 flex-col justify-center gap-12 py-12 lg:grid lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:gap-20">
           <div className="animate-fade-in">
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-income">
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-blue-400">
               Suas finanças, com clareza
             </p>
             <h1 className="mt-4 font-display text-[2.6rem] leading-[1.04] font-medium tracking-tight text-balance sm:text-5xl lg:text-[3.4rem]">
-              Receitas e despesas, <span className="text-income">em ordem.</span>
+              Receitas e despesas, <span className="text-primary">em ordem.</span>
             </h1>
             <p className="mt-5 max-w-md text-pretty leading-relaxed text-muted-foreground">
               Registre seus ganhos e gastos, organize tudo em categorias e

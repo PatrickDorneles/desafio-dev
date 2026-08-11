@@ -20,7 +20,7 @@ test.describe("categories (FR-023..FR-025, CA-008/009)", () => {
 
     // --- create a category with a color swatch (CA-008) ---
     await page.getByRole("button", { name: "Gerenciar categorias" }).click();
-    await createCategory(page, "Alimentação", "#34d399");
+    await createCategory(page, "Alimentação", "#2563eb");
     await expect(list).toContainText("Alimentação");
 
     // --- duplicate name → 409 shown inline, modal stays open (FR-025) ---
