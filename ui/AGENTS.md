@@ -31,8 +31,14 @@ Conventions for the `ui/` package. Read the root `AGENTS.md` first.
 
 ## Zod / API contracts
 
-- Parse API responses and form inputs with the shared Zod schemas; type with `z.infer`.
-- Validate client-side with the same schemas used by the API (see the `zod-shared-schemas` skill).
+- Schemas live in `src/lib/schemas/`, mirroring the API DTOs (ADR-0009 — the API is the source of truth; each file references the mirrored `api/src/...` DTO). Type with `z.infer`; never hand-write contract interfaces.
+- Validate form inputs and parse API responses with these schemas (`safeParse` in `src/lib/api/`); never trust the wire.
+
+## Sessão (ADR-0008)
+
+- Access token in `localStorage` (app-scoped key); sent as `Authorization: Bearer` on every authenticated call.
+- Authenticated pages are client components fetching via TanStack Query (the server can't see `localStorage`); the landing `/` stays a server component.
+- Any `401` clears the session and redirects to `/`.
 
 ## Verification
 

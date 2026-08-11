@@ -17,7 +17,7 @@ Development is **spec-driven**: implement from specs in `docs/specs/`, record ar
 
 - **API:** NestJS 11 · Fastify · Drizzle ORM + SQLite · Zod (schemas) · Swagger
 - **UI:** Next.js 15 App Router · React 19 · Tailwind CSS v4 · shadcn/ui · TanStack Query · zustand (only if needed) · Zod
-- **Both:** TypeScript strict. Zod is the single source of truth for data contracts (see the `zod-shared-schemas` skill).
+- **Both:** TypeScript strict. Zod is the single source of truth for data contracts: the API DTOs are canonical, and the UI mirrors them in `ui/src/lib/schemas/` (ADR-0009).
 
 ## Commands
 
