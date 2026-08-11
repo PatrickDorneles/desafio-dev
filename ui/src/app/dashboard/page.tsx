@@ -11,6 +11,7 @@ import { TransactionDialog } from "@/components/transactions/transaction-dialog"
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { Transaction } from "@/lib/schemas";
 import { RotateCw, TriangleAlert } from "lucide-react";
 
 export default function DashboardPage() {
@@ -18,6 +19,7 @@ export default function DashboardPage() {
   const restore = useSessionStore((state) => state.restore);
   const [transactionOpen, setTransactionOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [sessionStalled, setSessionStalled] = useState(false);
   const [retryNonce, setRetryNonce] = useState(0);
 
@@ -50,6 +52,21 @@ export default function DashboardPage() {
     return <DashboardSkeleton />;
   }
 
+  function openNewTransaction() {
+    setEditingTransaction(null);
+    setTransactionOpen(true);
+  }
+
+  function openEditTransaction(transaction: Transaction) {
+    setEditingTransaction(transaction);
+    setTransactionOpen(true);
+  }
+
+  function handleTransactionOpenChange(open: boolean) {
+    setTransactionOpen(open);
+    if (!open) setEditingTransaction(null);
+  }
+
   return (
     <div className="relative min-h-dvh">
       {/* Subtle top glow, much calmer than the landing. */}
@@ -60,18 +77,22 @@ export default function DashboardPage() {
 
       <DashboardHeader
         user={user}
-        onNewTransaction={() => setTransactionOpen(true)}
+        onNewTransaction={openNewTransaction}
         onManageCategories={() => setCategoriesOpen(true)}
       />
 
       <main className="mx-auto w-full max-w-6xl space-y-6 px-5 pb-16 pt-8 sm:px-8 lg:px-10">
         <SummaryCards />
-        <TransactionsTable onNewTransaction={() => setTransactionOpen(true)} />
+        <TransactionsTable
+          onNewTransaction={openNewTransaction}
+          onEditTransaction={openEditTransaction}
+        />
       </main>
 
       <TransactionDialog
         open={transactionOpen}
-        onOpenChange={setTransactionOpen}
+        onOpenChange={handleTransactionOpenChange}
+        transaction={editingTransaction}
       />
       <CategoriesDialog open={categoriesOpen} onOpenChange={setCategoriesOpen} />
     </div>

@@ -1,13 +1,30 @@
 "use client";
 
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { listCategories, listTransactions } from "@/lib/api/endpoints";
+import { deleteTransaction, listCategories, listTransactions } from "@/lib/api/endpoints";
 import { queryKeys } from "@/lib/api/query-keys";
 import { errorMessage } from "@/lib/errors";
 import { formatBRL, formatDate } from "@/lib/format";
 import { TransactionType } from "@/lib/schemas";
 import type { Category, Transaction } from "@/lib/schemas";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -44,12 +61,17 @@ const PAGE_SIZE = 10;
 
 interface TransactionsTableProps {
   onNewTransaction: () => void;
+  onEditTransaction: (transaction: Transaction) => void;
 }
 
 export function TransactionsTable({
   onNewTransaction,
+  onEditTransaction,
 }: TransactionsTableProps) {
   const [page, setPage] = useState(1);
+  const queryClient = useQueryClient();
+  const [deleting, setDeleting] = useState<Transaction | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const transactions = useQuery({
     queryKey: queryKeys.transactions(page, PAGE_SIZE),
@@ -61,6 +83,22 @@ export function TransactionsTable({
     queryKey: queryKeys.categories,
     queryFn: listCategories,
     staleTime: 5 * 60_000,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteTransaction(id),
+    onSuccess: () => {
+      // FR-020: table + summary refresh after delete.
+      void queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.summary });
+      // Deleting the last row on a page past the first empties it — bounce to
+      // page 1 (the table also covers the beyond-end case defensively).
+      if (page > 1 && (transactions.data?.data.length ?? 0) === 1) {
+        setPage(1);
+      }
+      setDeleting(null);
+      setDeleteError(null);
+    },
   });
 
   const categoryById = useMemo(() => {
@@ -137,6 +175,11 @@ export function TransactionsTable({
                     key={transaction.id}
                     transaction={transaction}
                     category={transaction.categoryId ? categoryById.get(transaction.categoryId) : undefined}
+                    onEdit={onEditTransaction}
+                    onDelete={(target) => {
+                      setDeleteError(null);
+                      setDeleting(target);
+                    }}
                   />
                 ))}
               </TableBody>
@@ -156,6 +199,59 @@ export function TransactionsTable({
           )}
         </>
       )}
+
+      {/* FR-020: delete needs confirmation — always state the consequence. */}
+      <AlertDialog
+        open={deleting != null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleting(null);
+            setDeleteError(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogMedia className="bg-expense/10 text-expense">
+              <Trash2 aria-hidden />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Excluir esta movimentação?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleting
+                ? `“${deleting.description}” será removida do seu histórico. Essa ação não pode ser desfeita.`
+                : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {deleteError && (
+            <Alert variant="destructive">
+              <TriangleAlert className="size-4" aria-hidden />
+              <AlertDescription>{deleteError}</AlertDescription>
+            </Alert>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={deleteMutation.isPending}
+              onClick={(event) => {
+                event.preventDefault();
+                if (!deleting) return;
+                setDeleteError(null);
+                deleteMutation.mutate(deleting.id);
+              }}
+            >
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" aria-hidden />
+                  Excluindo…
+                </>
+              ) : (
+                "Excluir"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
@@ -163,9 +259,13 @@ export function TransactionsTable({
 function TransactionRow({
   transaction,
   category,
+  onEdit,
+  onDelete,
 }: {
   transaction: Transaction;
   category: Category | undefined;
+  onEdit: (transaction: Transaction) => void;
+  onDelete: (transaction: Transaction) => void;
 }) {
   const isIncome = transaction.type === TransactionType.INCOME;
 
@@ -220,14 +320,11 @@ function TransactionRow({
       </TableCell>
       <TableCell className="pr-0">
         <div className="flex justify-end gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover/row:opacity-100 sm:focus-within:opacity-100">
-          {/* Edit/delete are wired by the next lane — visible now for affordance. */}
           <Button
             variant="ghost"
             size="icon-sm"
             aria-label={`Editar ${transaction.description}`}
-            onClick={() => {
-              /* no-op (próxima etapa) */
-            }}
+            onClick={() => onEdit(transaction)}
           >
             <Pencil className="size-3.5" aria-hidden />
           </Button>
@@ -236,9 +333,7 @@ function TransactionRow({
             size="icon-sm"
             aria-label={`Excluir ${transaction.description}`}
             className="hover:text-destructive"
-            onClick={() => {
-              /* no-op (próxima etapa) */
-            }}
+            onClick={() => onDelete(transaction)}
           >
             <Trash2 className="size-3.5" aria-hidden />
           </Button>
