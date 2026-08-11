@@ -4,8 +4,8 @@ title: "Autenticação e Usuários"
 status: "Proposed"              # Draft | Proposed | Approved | Implemented | Superseded
 author: "PatrickDorneles"
 created: "2026-08-10"
-updated: "2026-08-10"
-related-specs: ["002-categorias", "003-movimentacoes"]
+updated: "2026-08-11"
+related-specs: ["002-categorias", "003-movimentacoes", "004-interface-web"]
 related-adrs: ["0001", "0002"]
 ---
 
@@ -46,7 +46,7 @@ related-adrs: ["0001", "0002"]
 
 ## 5. Requisitos Funcionais (FR)
 
-- **FR-001**: QUANDO um visitante se cadastra com nome (1–100), e-mail válido e senha (8–72) O SISTEMA DEVE criar o usuário com senha hasheada (bcrypt) e retornar `201`.
+- **FR-001**: QUANDO um visitante se cadastra com nome (1–100), e-mail válido e senha (8–72) O SISTEMA DEVE criar o usuário com senha hasheada (bcrypt) e retornar `201` com `{ accessToken, user }` (auto-login — Spec 004 FR-002).
 - **FR-002**: QUANDO um visitante se cadastra com e-mail já existente (case-insensitive) O SISTEMA DEVE rejeitar com `409 Conflict` e NÃO DEVE revelar detalhes sobre o e-mail em respostas de lista/erro.
 - **FR-003**: QUANDO um usuário envia credenciais válidas em `/auth/login` O SISTEMA DEVE retornar `200` com um JWT (access token) e o perfil do usuário.
 - **FR-004**: QUANDO um usuário envia e-mail ou senha inválidos em `/auth/login` O SISTEMA DEVE rejeitar com `401 Unauthorized` usando a MESMA mensagem para e-mail inexistente ou senha errada (não revelar qual campo falhou).
@@ -61,7 +61,7 @@ related-adrs: ["0001", "0002"]
 - **CA-001**:
   - DADO um e-mail ainda não cadastrado
   - QUANDO envio `POST /auth/register` com `{ name, email, password }` válidos
-  - ENTÃO recebo `201`, o corpo NÃO contém `passwordHash`, e o usuário existe no banco com senha hasheada.
+  - ENTÃO recebo `201` com `accessToken` (JWT válido) e `user` (sem `passwordHash`), e o usuário existe no banco com senha hasheada.
 - **CA-002**:
   - DADO um e-mail já cadastrado (mesmo com caixa diferente)
   - QUANDO envio `POST /auth/register`
@@ -105,10 +105,12 @@ related-adrs: ["0001", "0002"]
 { "name": "Maria Silva", "email": "maria@exemplo.com", "password": "senha-forte-123" }
 
 // response 201
-{ "id": "uuid", "name": "Maria Silva", "email": "maria@exemplo.com", "createdAt": 1780000000000 }
+{ "accessToken": "<jwt>", "user": { "id": "uuid", "name": "Maria Silva", "email": "maria@exemplo.com", "createdAt": 1780000000000 } }
 
 // erros: 400 (validação) · 409 (e-mail já cadastrado)
 ```
+
+> Contrato alinhado com a Spec 004 (§9): o cadastro retorna o token para auto-login (FR-002 da Spec 004).
 
 ### `POST /auth/login`
 
