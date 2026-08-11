@@ -23,7 +23,7 @@ describe('CurrentUser decorator', () => {
   }
 
   it('returns request.user', () => {
-    const user = { sub: 'uuid-1' };
+    const user = { id: 'uuid-1', name: 'Alice', email: 'alice@example.com' };
     const context = {
       switchToHttp: () => ({ getRequest: () => ({ user }) }),
     } as unknown as ExecutionContext;

@@ -17,6 +17,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { CurrentUserPayload } from '../../common/types/current-user';
 import { CategoryResponseDto } from '../dto/category-response.dto';
 import { CreateCategoryDto } from '../dto/create-category.dto';
 import { UpdateCategoryDto } from '../dto/update-category.dto';
@@ -25,7 +26,7 @@ import { CategoryRow } from '../types/category.types';
 
 /**
  * Spec 002, §9. All routes protected by the global JwtAuthGuard (no @Public,
- * no per-route guard) — `@CurrentUser()` always resolves `{ sub }`.
+ * no per-route guard) — `@CurrentUser()` always resolves `{ id, name, email }`.
  */
 @ApiTags('categories')
 @ApiBearerAuth()
@@ -45,9 +46,9 @@ export class CategoriesController {
   @ApiResponse({ status: 409, description: 'Category name already exists' })
   create(
     @Body() dto: CreateCategoryDto,
-    @CurrentUser() user: { sub: string },
+    @CurrentUser() user: CurrentUserPayload,
   ): CategoryRow {
-    return this.categoriesService.create(user.sub, dto);
+    return this.categoriesService.create(user.id, dto);
   }
 
   @Get()
@@ -58,8 +59,8 @@ export class CategoriesController {
     type: [CategoryResponseDto],
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  findAll(@CurrentUser() user: { sub: string }): CategoryRow[] {
-    return this.categoriesService.findAll(user.sub);
+  findAll(@CurrentUser() user: CurrentUserPayload): CategoryRow[] {
+    return this.categoriesService.findAll(user.id);
   }
 
   @Get(':id')
@@ -74,9 +75,9 @@ export class CategoriesController {
   @ApiResponse({ status: 404, description: 'Category not found' })
   findOne(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: { sub: string },
+    @CurrentUser() user: CurrentUserPayload,
   ): CategoryRow {
-    return this.categoriesService.findOne(user.sub, id);
+    return this.categoriesService.findOne(user.id, id);
   }
 
   @Patch(':id')
@@ -93,9 +94,9 @@ export class CategoriesController {
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateCategoryDto,
-    @CurrentUser() user: { sub: string },
+    @CurrentUser() user: CurrentUserPayload,
   ): CategoryRow {
-    return this.categoriesService.update(user.sub, id, dto);
+    return this.categoriesService.update(user.id, id, dto);
   }
 
   @Delete(':id')
@@ -107,8 +108,8 @@ export class CategoriesController {
   @ApiResponse({ status: 404, description: 'Category not found' })
   remove(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: { sub: string },
+    @CurrentUser() user: CurrentUserPayload,
   ): void {
-    this.categoriesService.remove(user.sub, id);
+    this.categoriesService.remove(user.id, id);
   }
 }

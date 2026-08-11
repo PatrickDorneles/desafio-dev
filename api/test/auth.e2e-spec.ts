@@ -1,3 +1,4 @@
+import { JwtService } from '@nestjs/jwt';
 import { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { createTestApp } from './utils/test-app';
 
@@ -152,6 +153,26 @@ describe('Auth (e2e)', () => {
     });
 
     expect(res.statusCode).toBe(401);
+  });
+
+  it('GET /auth/me with a valid token for a NON-EXISTENT user → 401 (stale token)', async () => {
+    const jwtService = app.get(JwtService);
+    const token = await jwtService.signAsync({
+      sub: '00000000-0000-4000-8000-000000000000',
+    });
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/auth/me',
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(res.statusCode).toBe(401);
+    expect(json<ErrorEnvelope>(res)).toEqual({
+      statusCode: 401,
+      message: 'Unauthorized',
+      error: 'Unauthorized',
+    });
   });
 
   it('GET /health without token → 200 (public)', async () => {

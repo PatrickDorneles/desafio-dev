@@ -1,6 +1,7 @@
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
+import { UsersRepository } from '../../users/repositories/users.repository';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 describe('JwtAuthGuard', () => {
@@ -8,6 +9,7 @@ describe('JwtAuthGuard', () => {
   let guard: JwtAuthGuard;
   let reflector: jest.Mocked<Pick<Reflector, 'getAllAndOverride'>>;
   let realJwt: JwtService;
+  let usersRepository: jest.Mocked<Pick<UsersRepository, 'findById'>>;
 
   function mockContext(
     headers: Record<string, string | undefined>,
@@ -32,7 +34,12 @@ describe('JwtAuthGuard', () => {
   beforeEach(() => {
     reflector = { getAllAndOverride: jest.fn() };
     realJwt = new JwtService({ secret: SECRET });
-    guard = new JwtAuthGuard(reflector as unknown as Reflector, realJwt);
+    usersRepository = { findById: jest.fn() };
+    guard = new JwtAuthGuard(
+      reflector as unknown as Reflector,
+      realJwt,
+      usersRepository as unknown as UsersRepository,
+    );
   });
 
   it('allows @Public() routes without a token', async () => {
@@ -41,13 +48,38 @@ describe('JwtAuthGuard', () => {
     await expect(guard.canActivate(context)).resolves.toBe(true);
   });
 
-  it('passes a valid token and sets request.user.sub', async () => {
+  it('passes a valid token and sets request.user to the DB user (id/name/email)', async () => {
     reflector.getAllAndOverride.mockReturnValue(false);
+    usersRepository.findById.mockReturnValue({
+      id: 'uuid-1',
+      name: 'Alice',
+      email: 'alice@example.com',
+      passwordHash: 'hashed-password',
+      createdAt: 1780000000000,
+      updatedAt: 1780000000000,
+    });
     const token = await realJwt.signAsync({ sub: 'uuid-1' });
     const context = mockContext({ authorization: `Bearer ${token}` });
 
     await expect(guard.canActivate(context)).resolves.toBe(true);
-    expect(context.request.user).toEqual({ sub: 'uuid-1' });
+    expect(usersRepository.findById).toHaveBeenCalledWith('uuid-1');
+    expect(context.request.user).toEqual({
+      id: 'uuid-1',
+      name: 'Alice',
+      email: 'alice@example.com',
+    });
+  });
+
+  it('throws 401 when the token has no backing user (stale/deleted)', async () => {
+    reflector.getAllAndOverride.mockReturnValue(false);
+    usersRepository.findById.mockReturnValue(undefined);
+    const token = await realJwt.signAsync({ sub: 'uuid-1' });
+    const context = mockContext({ authorization: `Bearer ${token}` });
+
+    await expect(guard.canActivate(context)).rejects.toBeInstanceOf(
+      UnauthorizedException,
+    );
+    expect(context.request.user).toBeUndefined();
   });
 
   it('throws 401 when the Authorization header is missing', async () => {

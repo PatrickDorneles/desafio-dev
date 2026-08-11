@@ -2,7 +2,7 @@ import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { CurrentUserPayload } from '../types/current-user';
 
 /**
- * Injects the authenticated user (`{ sub }`) set by JwtAuthGuard.
+ * Injects the authenticated user (`{ id, name, email }`) set by JwtAuthGuard.
  * Only valid on routes protected by the global guard.
  */
 export const CurrentUser = createParamDecorator(

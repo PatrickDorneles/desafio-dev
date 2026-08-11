@@ -15,6 +15,7 @@ import {
 } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
+import { CurrentUserPayload } from '../../common/types/current-user';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
 import { UserProfileDto } from '../dto/user-profile.dto';
@@ -70,7 +71,7 @@ export class AuthController {
     type: UserProfileDto,
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  me(@CurrentUser() user: { sub: string }): UserProfile {
-    return this.authService.getProfile(user.sub);
+  me(@CurrentUser() user: CurrentUserPayload): UserProfile {
+    return this.authService.getProfile(user.id);
   }
 }

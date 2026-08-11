@@ -35,6 +35,7 @@ src/
 - **Layer discipline (SOLID/DRY):** controllers stay thin — no ORM calls; services hold domain logic — no raw DTO shaping; repositories are the only layer touching Drizzle. Reusable logic lives in `src/common/utils/` or shared services.
 - Pipeline: Middleware → Guards → Interceptors → Pipes → Handler.
   - Guards: auth/roles. Pipes: input validation (Zod/DTO). Interceptors: response shaping.
+- **Auth guard (Spec 001):** `JwtAuthGuard` (registered as `APP_GUARD` in `AuthModule`, not AppModule) verifies the HS256 JWT **and** resolves the user from the DB via `UsersRepository` — a valid token whose `sub` has no user → generic `401` (token alone never authorizes). `request.user` / `@CurrentUser()` carry the user's data `{ id, name, email }` (never the password hash); controllers read `user.id`, not `user.sub`.
 - Use the Fastify adapter idiomatically: platform-agnostic code; reach the HTTP server via `app.getHttpAdapter()`.
 - Swagger: keep `@ApiTags`/`@ApiOperation`/schema decorators on all endpoints; document DTO schemas.
 - Error responses must use the global envelope `{ statusCode, message, error }` (T-003) — never ad-hoc error shapes.

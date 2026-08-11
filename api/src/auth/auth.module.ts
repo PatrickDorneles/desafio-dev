@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import type { SignOptions } from 'jsonwebtoken';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './controllers/auth.controller';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { AuthService } from './services/auth.service';
 
 @Module({
@@ -33,7 +35,7 @@ import { AuthService } from './services/auth.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthService, { provide: APP_GUARD, useClass: JwtAuthGuard }],
   exports: [AuthService, JwtModule],
 })
 export class AuthModule {}

@@ -18,6 +18,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { CurrentUserPayload } from '../../common/types/current-user';
 import { CreateTransactionDto } from '../dto/create-transaction.dto';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { TransactionPageDto } from '../dto/transaction-page.dto';
@@ -33,7 +34,7 @@ import {
 
 /**
  * Spec 003, §9. All routes protected by the global JwtAuthGuard (no @Public,
- * no per-route guard) — `@CurrentUser()` always resolves `{ sub }`.
+ * no per-route guard) — `@CurrentUser()` always resolves `{ id, name, email }`.
  * IMPORTANT: `GET summary` is declared BEFORE `GET :id` so Fastify never
  * captures `summary` as an `:id` segment (spec §3).
  */
@@ -57,9 +58,9 @@ export class TransactionsController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   create(
     @Body() dto: CreateTransactionDto,
-    @CurrentUser() user: { sub: string },
+    @CurrentUser() user: CurrentUserPayload,
   ): TransactionRow {
-    return this.transactionsService.create(user.sub, dto);
+    return this.transactionsService.create(user.id, dto);
   }
 
   @Get()
@@ -72,10 +73,10 @@ export class TransactionsController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   findAll(
-    @CurrentUser() user: { sub: string },
+    @CurrentUser() user: CurrentUserPayload,
     @Query() query: PaginationQueryDto,
   ): TransactionPage {
-    return this.transactionsService.findAll(user.sub, query);
+    return this.transactionsService.findAll(user.id, query);
   }
 
   @Get('summary')
@@ -86,8 +87,8 @@ export class TransactionsController {
     type: TransactionSummaryDto,
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  getSummary(@CurrentUser() user: { sub: string }): TransactionSummary {
-    return this.transactionsService.getSummary(user.sub);
+  getSummary(@CurrentUser() user: CurrentUserPayload): TransactionSummary {
+    return this.transactionsService.getSummary(user.id);
   }
 
   @Get(':id')
@@ -102,9 +103,9 @@ export class TransactionsController {
   @ApiResponse({ status: 404, description: 'Transaction not found' })
   findOne(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: { sub: string },
+    @CurrentUser() user: CurrentUserPayload,
   ): TransactionRow {
-    return this.transactionsService.findOne(user.sub, id);
+    return this.transactionsService.findOne(user.id, id);
   }
 
   @Patch(':id')
@@ -123,9 +124,9 @@ export class TransactionsController {
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateTransactionDto,
-    @CurrentUser() user: { sub: string },
+    @CurrentUser() user: CurrentUserPayload,
   ): TransactionRow {
-    return this.transactionsService.update(user.sub, id, dto);
+    return this.transactionsService.update(user.id, id, dto);
   }
 
   @Delete(':id')
@@ -137,8 +138,8 @@ export class TransactionsController {
   @ApiResponse({ status: 404, description: 'Transaction not found' })
   remove(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: { sub: string },
+    @CurrentUser() user: CurrentUserPayload,
   ): void {
-    this.transactionsService.remove(user.sub, id);
+    this.transactionsService.remove(user.id, id);
   }
 }

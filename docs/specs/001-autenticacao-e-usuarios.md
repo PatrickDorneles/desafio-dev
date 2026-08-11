@@ -50,7 +50,7 @@ related-adrs: ["0001", "0002"]
 - **FR-002**: QUANDO um visitante se cadastra com e-mail já existente (case-insensitive) O SISTEMA DEVE rejeitar com `409 Conflict` e NÃO DEVE revelar detalhes sobre o e-mail em respostas de lista/erro.
 - **FR-003**: QUANDO um usuário envia credenciais válidas em `/auth/login` O SISTEMA DEVE retornar `200` com um JWT (access token) e o perfil do usuário.
 - **FR-004**: QUANDO um usuário envia e-mail ou senha inválidos em `/auth/login` O SISTEMA DEVE rejeitar com `401 Unauthorized` usando a MESMA mensagem para e-mail inexistente ou senha errada (não revelar qual campo falhou).
-- **FR-005**: QUANDO uma requisição inclui um JWT válido em `Authorization: Bearer` O SISTEMA DEVE identificar o usuário autenticado.
+- **FR-005**: QUANDO uma requisição inclui um JWT válido em `Authorization: Bearer` O SISTEMA DEVE identificar o usuário autenticado **resolvendo-o no banco pelo `sub` do token**: usuário inexistente/removido → `401` genérico (o token sozinho não autoriza). As rotas protegidas recebem os dados do usuário (`id`, `name`, `email` — **nunca** o hash de senha) via `request.user`/`@CurrentUser()`.
 - **FR-006**: QUANDO uma requisição a rota protegida traz JWT ausente, inválido ou expirado O SISTEMA DEVE rejeitar com `401 Unauthorized`.
 - **FR-007**: QUANDO um usuário autenticado acessa `GET /auth/me` O SISTEMA DEVE retornar `200` com o perfil `{ id, name, email, createdAt }`.
 - **FR-008**: QUANDO qualquer endpoint protegido é executado O SISTEMA DEVE garantir que todas as consultas filtram por `userId` do token (nunca por dado da requisição).
