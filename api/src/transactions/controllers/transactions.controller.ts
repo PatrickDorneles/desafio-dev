@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -18,11 +19,17 @@ import {
 } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { CreateTransactionDto } from '../dto/create-transaction.dto';
+import { PaginationQueryDto } from '../dto/pagination-query.dto';
+import { TransactionPageDto } from '../dto/transaction-page.dto';
 import { TransactionResponseDto } from '../dto/transaction-response.dto';
 import { TransactionSummaryDto } from '../dto/transaction-summary.dto';
 import { UpdateTransactionDto } from '../dto/update-transaction.dto';
 import { TransactionsService } from '../services/transactions.service';
-import { TransactionRow, TransactionSummary } from '../types/transaction.types';
+import {
+  TransactionPage,
+  TransactionRow,
+  TransactionSummary,
+} from '../types/transaction.types';
 
 /**
  * Spec 003, §9. All routes protected by the global JwtAuthGuard (no @Public,
@@ -56,15 +63,19 @@ export class TransactionsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'List my transactions' })
+  @ApiOperation({ summary: 'List my transactions (paginated)' })
   @ApiResponse({
     status: 200,
-    description: 'Transactions ordered by date DESC, then createdAt DESC',
-    type: [TransactionResponseDto],
+    description:
+      'Paginated transactions ordered by date DESC, createdAt DESC, id DESC',
+    type: TransactionPageDto,
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  findAll(@CurrentUser() user: { sub: string }): TransactionRow[] {
-    return this.transactionsService.findAll(user.sub);
+  findAll(
+    @CurrentUser() user: { sub: string },
+    @Query() query: PaginationQueryDto,
+  ): TransactionPage {
+    return this.transactionsService.findAll(user.sub, query);
   }
 
   @Get('summary')

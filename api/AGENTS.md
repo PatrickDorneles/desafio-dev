@@ -38,6 +38,7 @@ src/
 - Use the Fastify adapter idiomatically: platform-agnostic code; reach the HTTP server via `app.getHttpAdapter()`.
 - Swagger: keep `@ApiTags`/`@ApiOperation`/schema decorators on all endpoints; document DTO schemas.
 - Error responses must use the global envelope `{ statusCode, message, error }` (T-003) — never ad-hoc error shapes.
+- **Paginated GETs (ADR-0007):** return `{ data, meta }` — meta built with `buildPaginationMeta` (`src/common/utils/pagination.util.ts`), typed as `PaginationMeta` (`src/common/types/pagination.ts`). Query params `page` (1-based, default 1) + `pageSize` (default 10, max 100) as a zod query DTO (`z.coerce.number()`). Pagination needs a stable order with a final tiebreaker (e.g. `id DESC`). Repos stay sync — count via a `count()` select, not `db.$count` (async).
 
 ## Drizzle ORM + SQLite
 

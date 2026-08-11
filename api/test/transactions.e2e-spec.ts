@@ -22,6 +22,20 @@ interface SummaryBody {
   balanceCents: number;
 }
 
+interface PaginationMetaBody {
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+interface TransactionPageBody {
+  data: TransactionBody[];
+  meta: PaginationMetaBody;
+}
+
 interface ErrorEnvelope {
   statusCode: number;
   message: string | string[];
@@ -92,14 +106,17 @@ describe('Transactions (e2e)', () => {
     return json<TransactionBody>(res);
   }
 
-  async function listTransactions(token: string): Promise<TransactionBody[]> {
+  async function listTransactions(
+    token: string,
+    query = '',
+  ): Promise<TransactionPageBody> {
     const res = await app.inject({
       method: 'GET',
-      url: '/transactions',
+      url: `/transactions${query}`,
       headers: auth(token),
     });
     expect(res.statusCode).toBe(200);
-    return json<TransactionBody[]>(res);
+    return json<TransactionPageBody>(res);
   }
 
   it('CA-001: POST /transactions with own category → 201 full body, appears in list', async () => {
@@ -133,11 +150,11 @@ describe('Transactions (e2e)', () => {
     expect(typeof tx.updatedAt).toBe('number');
 
     const list = await listTransactions(tokenA);
-    expect(list.some((t) => t.id === tx.id)).toBe(true);
+    expect(list.data.some((t) => t.id === tx.id)).toBe(true);
   });
 
   it('CA-002: amountCents 0 / negative / decimal → 400, nothing created', async () => {
-    const before = (await listTransactions(tokenC)).length;
+    const before = (await listTransactions(tokenC)).data.length;
 
     for (const amountCents of [0, -100, 10.5]) {
       const res = await app.inject({
@@ -150,12 +167,12 @@ describe('Transactions (e2e)', () => {
     }
 
     const after = await listTransactions(tokenC);
-    expect(after.length).toBe(before);
+    expect(after.data.length).toBe(before);
   });
 
   it('CA-003: foreign categoryId and unknown uuid → 400, nothing created', async () => {
     const bobCategory = await createCategory(tokenB, { name: 'Bob-cat' });
-    const before = (await listTransactions(tokenA)).length;
+    const before = (await listTransactions(tokenA)).data.length;
 
     const foreign = await app.inject({
       method: 'POST',
@@ -184,7 +201,7 @@ describe('Transactions (e2e)', () => {
     expect(unknown.statusCode).toBe(400);
 
     const after = await listTransactions(tokenA);
-    expect(after.length).toBe(before);
+    expect(after.data.length).toBe(before);
   });
 
   it('CA-004: list ordered by date DESC, same-date tie-break createdAt DESC (FR-018)', async () => {
@@ -217,15 +234,15 @@ describe('Transactions (e2e)', () => {
 
     const list = await listTransactions(tokenD);
 
-    expect(list.map((t) => t.date)).toEqual([
+    expect(list.data.map((t) => t.date)).toEqual([
       '2026-08-10',
       '2026-08-05',
       '2026-08-05',
       '2026-08-01',
     ]);
-    expect(list[1].description).toBe('mid-b');
-    expect(list[2].description).toBe('mid-a');
-    expect(list[1].createdAt).toBeGreaterThan(list[2].createdAt);
+    expect(list.data[1].description).toBe('mid-b');
+    expect(list.data[2].description).toBe('mid-a');
+    expect(list.data[1].createdAt).toBeGreaterThan(list.data[2].createdAt);
   });
 
   it('CA-005: other user / nonexistent id → identical 404 (GET/PATCH/DELETE)', async () => {
@@ -493,5 +510,115 @@ describe('Transactions (e2e)', () => {
       headers: auth(tokenA),
     });
     expect(get.statusCode).toBe(404);
+  });
+
+  describe('pagination (ADR-0007)', () => {
+    let tokenF: string;
+
+    beforeAll(async () => {
+      const f = await registerAndLogin(app, 'Fay Mov', 'fay.mov@example.com');
+      tokenF = f.token;
+    });
+
+    it('default pagination (no query) → all items, totalPages 1, no next', async () => {
+      await createTransaction(tokenF, {
+        type: 'INCOME',
+        amountCents: 1000,
+        description: 'p1',
+        date: '2026-08-01',
+      });
+      await createTransaction(tokenF, {
+        type: 'INCOME',
+        amountCents: 2000,
+        description: 'p2',
+        date: '2026-08-02',
+      });
+
+      const page = await listTransactions(tokenF);
+
+      expect(page.data).toHaveLength(2);
+      expect(page.meta).toMatchObject({
+        page: 1,
+        pageSize: 10,
+        totalItems: 2,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      });
+    });
+
+    it('pageSize split → page 1 has 2, page 2 has 1, flags correct', async () => {
+      await createTransaction(tokenF, {
+        type: 'INCOME',
+        amountCents: 3000,
+        description: 'p3',
+        date: '2026-08-03',
+      });
+
+      const page1 = await listTransactions(tokenF, '?pageSize=2');
+      expect(page1.data).toHaveLength(2);
+      expect(page1.meta).toMatchObject({
+        page: 1,
+        pageSize: 2,
+        totalItems: 3,
+        totalPages: 2,
+        hasNextPage: true,
+        hasPreviousPage: false,
+      });
+
+      const page2 = await listTransactions(tokenF, '?page=2&pageSize=2');
+      expect(page2.data).toHaveLength(1);
+      expect(page2.meta).toMatchObject({
+        page: 2,
+        pageSize: 2,
+        totalItems: 3,
+        totalPages: 2,
+        hasNextPage: false,
+        hasPreviousPage: true,
+      });
+      // No overlap between pages.
+      const ids = [...page1.data, ...page2.data].map((t) => t.id);
+      expect(new Set(ids).size).toBe(3);
+    });
+
+    it('out-of-range page → 200 with empty data and real totalPages', async () => {
+      const page = await listTransactions(tokenF, '?page=99');
+
+      expect(page.data).toEqual([]);
+      expect(page.meta).toMatchObject({
+        page: 99,
+        totalItems: 3,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: true,
+      });
+    });
+
+    it('invalid pagination params → 400 validation envelope', async () => {
+      for (const query of [
+        '?page=0',
+        '?page=abc',
+        '?pageSize=0',
+        '?pageSize=101',
+      ]) {
+        const res = await app.inject({
+          method: 'GET',
+          url: `/transactions${query}`,
+          headers: auth(tokenF),
+        });
+        expect(res.statusCode).toBe(400);
+        const body = json<ErrorEnvelope>(res);
+        expect(body.statusCode).toBe(400);
+        expect(body.error).toBeDefined();
+        expect(body.message).toBeDefined();
+      }
+    });
+
+    it('isolation holds — a page only contains the caller’s rows', async () => {
+      const page = await listTransactions(tokenA, '?pageSize=100');
+
+      expect(page.data.every((t) => t.userId === userIdA)).toBe(true);
+      expect(page.meta.totalItems).toBeGreaterThan(0);
+    });
   });
 });

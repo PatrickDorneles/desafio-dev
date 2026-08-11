@@ -4,10 +4,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CategoriesRepository } from '../../categories/repositories/categories.repository';
+import { buildPaginationMeta } from '../../common/utils/pagination.util';
 import { CreateTransactionDto } from '../dto/create-transaction.dto';
+import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { UpdateTransactionDto } from '../dto/update-transaction.dto';
 import { TransactionsRepository } from '../repositories/transactions.repository';
 import {
+  TransactionPage,
   TransactionRow,
   TransactionSummary,
   TransactionType,
@@ -39,9 +42,15 @@ export class TransactionsService {
     });
   }
 
-  /** FR-004: pass-through of the owner-scoped, ordered list. */
-  findAll(userId: string): TransactionRow[] {
-    return this.transactionsRepository.findAllByUserId(userId);
+  /** FR-004/ADR-0007: owner-scoped, paginated list with meta. */
+  findAll(userId: string, query: PaginationQueryDto): TransactionPage {
+    const { page, pageSize } = query;
+    const totalItems = this.transactionsRepository.countByUserId(userId);
+    const data = this.transactionsRepository.findAllByUserId(userId, {
+      limit: pageSize,
+      offset: (page - 1) * pageSize,
+    });
+    return { data, meta: buildPaginationMeta(page, pageSize, totalItems) };
   }
 
   /** FR-005/CA-005: 404 for missing OR other-user rows — no distinction. */

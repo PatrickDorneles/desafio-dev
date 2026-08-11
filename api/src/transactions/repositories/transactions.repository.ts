@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, desc, eq, sum } from 'drizzle-orm';
+import { and, count, desc, eq, sum } from 'drizzle-orm';
 import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { DRIZZLE } from '../../common/constants/database.constants';
 import { transactions } from '../entities/transaction.entity';
@@ -20,14 +20,38 @@ import {
 export class TransactionsRepository {
   constructor(@Inject(DRIZZLE) private readonly db: BetterSQLite3Database) {}
 
-  /** FR-004/FR-018: own transactions only, date DESC then createdAt DESC. */
-  findAllByUserId(userId: string): TransactionRow[] {
+  /**
+   * FR-004/FR-018/ADR-0007: own transactions only, stable order
+   * `date DESC, createdAt DESC, id DESC` (id is the final tiebreaker so a row
+   * never appears twice or vanishes between pages), sliced by limit/offset.
+   */
+  findAllByUserId(
+    userId: string,
+    options: { limit: number; offset: number },
+  ): TransactionRow[] {
     return this.db
       .select()
       .from(transactions)
       .where(eq(transactions.userId, userId))
-      .orderBy(desc(transactions.date), desc(transactions.createdAt))
+      .orderBy(
+        desc(transactions.date),
+        desc(transactions.createdAt),
+        desc(transactions.id),
+      )
+      .limit(options.limit)
+      .offset(options.offset)
       .all();
+  }
+
+  /** ADR-0007: total own transactions (sync — not db.$count, which is async). */
+  countByUserId(userId: string): number {
+    return (
+      this.db
+        .select({ count: count() })
+        .from(transactions)
+        .where(eq(transactions.userId, userId))
+        .get()?.count ?? 0
+    );
   }
 
   /** FR-005: scoped to the owner — returns `undefined` for other users' rows. */

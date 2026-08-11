@@ -11,6 +11,7 @@ describe('TransactionsService', () => {
     Pick<
       TransactionsRepository,
       | 'findAllByUserId'
+      | 'countByUserId'
       | 'findByIdAndUserId'
       | 'create'
       | 'update'
@@ -37,6 +38,7 @@ describe('TransactionsService', () => {
   beforeEach(async () => {
     transactionsRepository = {
       findAllByUserId: jest.fn(),
+      countByUserId: jest.fn(),
       findByIdAndUserId: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
@@ -127,15 +129,85 @@ describe('TransactionsService', () => {
   });
 
   describe('findAll', () => {
-    it('passes through the repository list (FR-004)', () => {
+    it('defaults to page 1 / pageSize 10 → offset 0, limit 10 (ADR-0007)', () => {
+      transactionsRepository.countByUserId.mockReturnValue(25);
       transactionsRepository.findAllByUserId.mockReturnValue([transactionRow]);
 
-      const result = service.findAll('uuid-user-1');
+      const result = service.findAll('uuid-user-1', { page: 1, pageSize: 10 });
+
+      expect(transactionsRepository.countByUserId).toHaveBeenCalledWith(
+        'uuid-user-1',
+      );
+      expect(transactionsRepository.findAllByUserId).toHaveBeenCalledWith(
+        'uuid-user-1',
+        { limit: 10, offset: 0 },
+      );
+      expect(result.data).toEqual([transactionRow]);
+      expect(result.meta).toEqual({
+        page: 1,
+        pageSize: 10,
+        totalItems: 25,
+        totalPages: 3,
+        hasNextPage: true,
+        hasPreviousPage: false,
+      });
+    });
+
+    it('delegates offset/limit for later pages (page 3 of 25 @ 10)', () => {
+      transactionsRepository.countByUserId.mockReturnValue(25);
+      transactionsRepository.findAllByUserId.mockReturnValue([]);
+
+      service.findAll('uuid-user-1', { page: 3, pageSize: 10 });
 
       expect(transactionsRepository.findAllByUserId).toHaveBeenCalledWith(
         'uuid-user-1',
+        { limit: 10, offset: 20 },
       );
-      expect(result).toEqual([transactionRow]);
+    });
+
+    it('last page → hasNextPage false (page 3 of 25 @ 10)', () => {
+      transactionsRepository.countByUserId.mockReturnValue(25);
+      transactionsRepository.findAllByUserId.mockReturnValue([]);
+
+      const result = service.findAll('uuid-user-1', { page: 3, pageSize: 10 });
+
+      expect(result.meta.hasNextPage).toBe(false);
+      expect(result.meta.hasPreviousPage).toBe(true);
+      expect(result.meta.totalPages).toBe(3);
+    });
+
+    it('out-of-range page → empty data with correct meta (never 404)', () => {
+      transactionsRepository.countByUserId.mockReturnValue(25);
+      transactionsRepository.findAllByUserId.mockReturnValue([]);
+
+      const result = service.findAll('uuid-user-1', { page: 99, pageSize: 10 });
+
+      expect(result.data).toEqual([]);
+      expect(result.meta).toEqual({
+        page: 99,
+        pageSize: 10,
+        totalItems: 25,
+        totalPages: 3,
+        hasNextPage: false,
+        hasPreviousPage: true,
+      });
+    });
+
+    it('empty store → totalPages 0, no navigation flags', () => {
+      transactionsRepository.countByUserId.mockReturnValue(0);
+      transactionsRepository.findAllByUserId.mockReturnValue([]);
+
+      const result = service.findAll('uuid-user-1', { page: 1, pageSize: 10 });
+
+      expect(result.data).toEqual([]);
+      expect(result.meta).toEqual({
+        page: 1,
+        pageSize: 10,
+        totalItems: 0,
+        totalPages: 0,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      });
     });
   });
 

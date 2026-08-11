@@ -1,3 +1,4 @@
+import { PaginationMeta } from '../../common/types/pagination';
 import { transactions } from '../entities/transaction.entity';
 
 export type TransactionRow = typeof transactions.$inferSelect;
@@ -38,4 +39,10 @@ export interface TransactionSummary {
   totalIncomeCents: number;
   totalExpenseCents: number;
   balanceCents: number;
+}
+
+/** ADR-0007: paginated listing response — `data` + `meta`. */
+export interface TransactionPage {
+  data: TransactionRow[];
+  meta: PaginationMeta;
 }

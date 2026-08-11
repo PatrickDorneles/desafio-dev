@@ -6,8 +6,11 @@ import { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { ZodValidationPipe } from './common/pipes/zod-validation.pipe';
+import { Logger } from '@nestjs/common';
 
 async function bootstrap() {
+  const logger = new Logger('Bootstrap');
+
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter(),
@@ -39,5 +42,8 @@ async function bootstrap() {
   const port = Number(configService.get('PORT', 3001));
 
   await app.listen(port, '0.0.0.0');
+
+  logger.log('Listening on http://localhost:3001');
+  logger.log('API documentation on http://localhost:3001/swagger');
 }
 void bootstrap();

@@ -78,6 +78,13 @@ describe('TransactionsRepository', () => {
     return row.id;
   }
 
+  /** Unpaginated convenience view for tests that don't exercise slicing. */
+  function findAll(
+    userId: string,
+  ): ReturnType<TransactionsRepository['findAllByUserId']> {
+    return repository.findAllByUserId(userId, { limit: 100, offset: 0 });
+  }
+
   describe('create', () => {
     it('inserts a row with timestamps and returns the full row', () => {
       const userId = createUser();
@@ -140,7 +147,7 @@ describe('TransactionsRepository', () => {
         ])
         .run();
 
-      const rows = repository.findAllByUserId(userId);
+      const rows = findAll(userId);
 
       expect(rows.map((r) => r.date)).toEqual([
         '2026-08-10',
@@ -150,6 +157,66 @@ describe('TransactionsRepository', () => {
       ]);
       expect(rows[1].createdAt).toBe(now + 200);
       expect(rows[2].createdAt).toBe(now + 100);
+    });
+
+    it('breaks date/createdAt ties by id DESC (ADR-0007 stable order)', () => {
+      const userId = createUser();
+      const now = Date.now();
+      const base = {
+        userId,
+        type: 'INCOME' as const,
+        amountCents: 1000,
+        description: 'x',
+        categoryId: null as string | null,
+      };
+      // Same date AND same createdAt → only the id tiebreaker can order them.
+      const rows = db
+        .insert(transactions)
+        .values([
+          { ...base, date: '2026-08-05', createdAt: now, updatedAt: now },
+          { ...base, date: '2026-08-05', createdAt: now, updatedAt: now },
+          { ...base, date: '2026-08-05', createdAt: now, updatedAt: now },
+        ])
+        .returning()
+        .all();
+
+      const listed = findAll(userId);
+
+      expect(listed.map((r) => r.id)).toEqual(
+        [...rows].sort((a, b) => b.id.localeCompare(a.id)).map((r) => r.id),
+      );
+    });
+
+    it('slices by limit/offset (ADR-0007)', () => {
+      const userId = createUser();
+      const now = Date.now();
+      const base = {
+        userId,
+        type: 'INCOME' as const,
+        amountCents: 1000,
+        description: 'x',
+        categoryId: null as string | null,
+      };
+      db.insert(transactions)
+        .values([
+          { ...base, date: '2026-08-01', createdAt: now, updatedAt: now },
+          { ...base, date: '2026-08-02', createdAt: now, updatedAt: now },
+          { ...base, date: '2026-08-03', createdAt: now, updatedAt: now },
+          { ...base, date: '2026-08-04', createdAt: now, updatedAt: now },
+          { ...base, date: '2026-08-05', createdAt: now, updatedAt: now },
+        ])
+        .run();
+
+      const page1 = repository.findAllByUserId(userId, { limit: 2, offset: 0 });
+      const page2 = repository.findAllByUserId(userId, { limit: 2, offset: 2 });
+      const page3 = repository.findAllByUserId(userId, { limit: 2, offset: 4 });
+
+      expect(page1.map((r) => r.date)).toEqual(['2026-08-05', '2026-08-04']);
+      expect(page2.map((r) => r.date)).toEqual(['2026-08-03', '2026-08-02']);
+      expect(page3.map((r) => r.date)).toEqual(['2026-08-01']);
+      // No overlap between pages → no row appears twice or vanishes.
+      const ids = [...page1, ...page2, ...page3].map((r) => r.id);
+      expect(new Set(ids).size).toBe(5);
     });
 
     it("returns only the user's own transactions", () => {
@@ -172,7 +239,7 @@ describe('TransactionsRepository', () => {
         date: '2026-08-02',
       });
 
-      const rows = repository.findAllByUserId(userA);
+      const rows = findAll(userA);
 
       expect(rows).toHaveLength(1);
       expect(rows[0].description).toBe('a');
@@ -180,7 +247,46 @@ describe('TransactionsRepository', () => {
 
     it('returns an empty array when the user has no transactions', () => {
       const userId = createUser();
-      expect(repository.findAllByUserId(userId)).toEqual([]);
+      expect(findAll(userId)).toEqual([]);
+    });
+  });
+
+  describe('countByUserId', () => {
+    it('counts only the user’s own transactions (ADR-0007)', () => {
+      const userA = createUser('Alice', 'alice@example.com');
+      const userB = createUser('Bob', 'bob@example.com');
+      repository.create({
+        userId: userA,
+        categoryId: null,
+        type: 'INCOME',
+        amountCents: 1000,
+        description: 'a',
+        date: '2026-08-01',
+      });
+      repository.create({
+        userId: userA,
+        categoryId: null,
+        type: 'EXPENSE',
+        amountCents: 500,
+        description: 'b',
+        date: '2026-08-02',
+      });
+      repository.create({
+        userId: userB,
+        categoryId: null,
+        type: 'INCOME',
+        amountCents: 2000,
+        description: 'c',
+        date: '2026-08-03',
+      });
+
+      expect(repository.countByUserId(userA)).toBe(2);
+      expect(repository.countByUserId(userB)).toBe(1);
+    });
+
+    it('returns 0 when the user has no transactions', () => {
+      const userId = createUser();
+      expect(repository.countByUserId(userId)).toBe(0);
     });
   });
 
@@ -401,7 +507,7 @@ describe('TransactionsRepository', () => {
 
       db.delete(users).where(eq(users.id, userId)).run();
 
-      expect(repository.findAllByUserId(userId)).toEqual([]);
+      expect(findAll(userId)).toEqual([]);
     });
   });
 

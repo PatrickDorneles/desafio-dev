@@ -21,7 +21,7 @@ related-adrs: ["0001"]
 
 ## 2. Não-objetivos (Non-Goals)
 
-- Paginação/filtros server-side (lista simples; filtros ficam para o cliente, se desejado).
+- Filtros server-side (listagem **paginada** — ver ADR-0007; filtros por data/categoria/tipo ficam para o cliente, se desejado).
 - Transações recorrentes, parcelamento, anexos/comprovantes, tags.
 - Múltiplas moedas (apenas BRL, inteiro em centavos) e valores negativos no payload (sinal vem do `type`).
 - Transferências entre contas, budgets/limites, relatórios por categoria/período.
@@ -53,7 +53,7 @@ related-adrs: ["0001"]
 - **FR-001**: QUANDO um usuário autenticado cria uma movimentação com `{ type, amountCents, description, date?, categoryId? }` válidos O SISTEMA DEVE persistir o lançamento vinculado ao `userId` do token e retornar `201`.
 - **FR-002**: QUANDO `amountCents` é `<= 0` ou não é inteiro O SISTEMA DEVE rejeitar com `400`.
 - **FR-003**: QUANDO `categoryId` é fornecido mas não existe ou pertence a outro usuário O SISTEMA DEVE rejeitar com `400`.
-- **FR-004**: QUANDO um usuário autenticado lista movimentações O SISTEMA DEVE retornar `200` apenas com as suas, ordenadas por `date` DESC (desempate: `createdAt` DESC).
+- **FR-004**: QUANDO um usuário autenticado lista movimentações (`GET /transactions?page&pageSize`) O SISTEMA DEVE retornar `200` com `{ data, meta }` — apenas as suas, ordenadas por `date` DESC (desempate: `createdAt` DESC, depois `id` DESC), página 1-based (default `1`), `pageSize` default `10` (máximo `100`), e `meta` com `page`, `pageSize`, `totalItems`, `totalPages`, `hasNextPage`, `hasPreviousPage` (ADR-0007).
 - **FR-005**: QUANDO um usuário autenticado busca uma movimentação por `id` O SISTEMA DEVE retornar `200` se for sua; QUANDO não existe **ou** pertence a outro usuário O SISTEMA DEVE retornar `404` idêntico (sem distinguir).
 - **FR-006**: QUANDO um usuário autenticado atualiza movimentação própria (`PATCH` parcial: `type?/amountCents?/description?/date?/categoryId?`) O SISTEMA DEVE aplicar as mudanças, revalidar (inclusive categoria, regra FR-003) e retornar `200`. `categoryId: null` remove o vínculo.
 - **FR-007**: QUANDO um usuário autenticado exclui movimentação própria O SISTEMA DEVE removê-la e retornar `204`.
@@ -133,15 +133,19 @@ Todas as rotas exigem `Authorization: Bearer <jwt>`.
 // erros: 400 (validação ou categoria inválida) · 401
 ```
 
-### `GET /transactions`
+### `GET /transactions` (paginada — ADR-0007)
 
 ```json
-// response 200 (ordenada por date DESC, desempate createdAt DESC)
-[
-  { "id": "uuid", "userId": "uuid", "categoryId": "uuid | null", "type": "INCOME", "amountCents": 10000, "description": "Salário", "date": "2026-08-01", "createdAt": 1780000000000, "updatedAt": 1780000000000 }
-]
+// query opcional: page (default 1) · pageSize (default 10, máximo 100)
+// response 200 (date DESC, desempate createdAt DESC, depois id DESC)
+{
+  "data": [
+    { "id": "uuid", "userId": "uuid", "categoryId": "uuid | null", "type": "INCOME", "amountCents": 10000, "description": "Salário", "date": "2026-08-01", "createdAt": 1780000000000, "updatedAt": 1780000000000 }
+  ],
+  "meta": { "page": 1, "pageSize": 10, "totalItems": 34, "totalPages": 4, "hasNextPage": true, "hasPreviousPage": false }
+}
 
-// erros: 401
+// página além do fim → 200 com data: [] · erros: 400 (page/pageSize inválidos) · 401
 ```
 
 ### `GET /transactions/summary`
